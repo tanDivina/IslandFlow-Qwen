@@ -6,6 +6,8 @@ import ControlPanel from './components/ControlPanel';
 import ItineraryDoc from './components/ItineraryDoc';
 import ErrorBoundary from './components/ErrorBoundary';
 import WeatherHorizon from './components/WeatherHorizon';
+import Magnet from './components/Magnet';
+
 
 
 
@@ -124,6 +126,8 @@ function App() {
   const [isItineraryOnly, setIsItineraryOnly] = useState(initialParams.itineraryOnly);
   const [archActiveLayer, setArchActiveLayer] = useState('all');
   const [selectedToolId, setSelectedToolId] = useState('get_tours');
+  const [mobileTab, setMobileTab] = useState('chat'); // 'chat' or 'itinerary'
+
 
   // States & Refs for resilient custom dropdown menus
   const [guestDropdownOpen, setGuestDropdownOpen] = useState(false);
@@ -2096,89 +2100,124 @@ function App() {
 
       {/* Render Guest Portal View */}
       {view === 'guest' && (
-        <div className="main-grid">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
-            <WeatherHorizon logistics={logistics} />
-            <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} />
-            <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
-            
-            {/* Urgent Human Front Desk Emergency Assistance Card */}
-            <div className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>Need Immediate Human Assistance?</h4>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.</p>
-                </div>
-              </div>
-              <a 
-                href="tel:+50766554433" 
-                style={{ 
-                  padding: '10px 18px', 
-                  fontSize: '0.82rem', 
-                  textDecoration: 'none', 
-                  background: '#ef4444', 
-                  color: '#ffffff', 
-                  border: 'none', 
-                  borderRadius: '10px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '8px', 
-                  fontWeight: 600,
-                  boxShadow: 'none',
-                  whiteSpace: 'nowrap',
-                  transition: 'background 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+        <div className={`guest-portal-wrapper show-${mobileTab}`} style={{ width: '100%' }}>
+          {/* Mobile Glass Tabs */}
+          <div className="guest-mobile-tabs">
+            <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
+              <button 
+                className={`guest-mobile-tab-btn ${mobileTab === 'chat' ? 'active' : ''}`}
+                onClick={() => setMobileTab('chat')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
               >
-                Call Front Desk
-              </a>
-            </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Chat Concierge
+              </button>
+            </Magnet>
+            <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
+              <button 
+                className={`guest-mobile-tab-btn ${mobileTab === 'itinerary' ? 'active' : ''}`}
+                onClick={() => setMobileTab('itinerary')}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                My Itinerary
+              </button>
+            </Magnet>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'chat-widget' }}>
-            {/* 🧠 Guest Persistent Memory Sidebar Widget */}
-            <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-                <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>Guest Persistent Memory</h4>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
-                </div>
-              </div>
+
+          <div className="main-grid">
+            <div className="guest-col-schedule" style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
+              <WeatherHorizon logistics={logistics} />
+              <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} />
+              <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
               
-              {guestMemories && guestMemories.length > 0 ? (
-                <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {guestMemories.map((mem, i) => (
-                    <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                      {mem}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
-                  No memories extracted yet. Tell Qwen your allergies, preferences, or scheduling constraints to see them sync in real-time!
+              {/* Urgent Human Front Desk Emergency Assistance Card */}
+              <div className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>Need Immediate Human Assistance?</h4>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.</p>
+                  </div>
                 </div>
-              )}
+                <a 
+                  href="tel:+50766554433" 
+                  style={{ 
+                    padding: '10px 18px', 
+                    fontSize: '0.82rem', 
+                    textDecoration: 'none', 
+                    background: '#ef4444', 
+                    color: '#ffffff', 
+                    border: 'none', 
+                    borderRadius: '10px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '8px', 
+                    fontWeight: 600,
+                    boxShadow: 'none',
+                    whiteSpace: 'nowrap',
+                    transition: 'background 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                >
+                  Call Front Desk
+                </a>
+              </div>
             </div>
 
-            <ChatWidget 
-              messages={messages} 
-              onSendMessage={handleSendMessage} 
-              onRespondProposal={handleRespondProposal} 
-              loading={loading}
-              bookings={bookings}
-              tenantBrand={tenantBrand}
-              tours={tours}
-              logistics={logistics}
-            />
+            <div className="guest-col-chat" style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'chat-widget', position: 'sticky', top: '24px', alignSelf: 'start' }}>
+              {/* 🧠 Guest Persistent Memory Sidebar Widget */}
+              <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>Guest Persistent Memory</h4>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
+                  </div>
+                </div>
+                
+                {guestMemories && guestMemories.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {guestMemories.map((mem, i) => (
+                      <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                        {mem}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
+                    No memories extracted yet. Tell Qwen your allergies, preferences, or scheduling constraints to see them sync in real-time!
+                  </div>
+                )}
+              </div>
+
+              <ChatWidget 
+                messages={messages} 
+                onSendMessage={handleSendMessage} 
+                onRespondProposal={handleRespondProposal} 
+                loading={loading}
+                bookings={bookings}
+                tenantBrand={tenantBrand}
+                tours={tours}
+                logistics={logistics}
+              />
+            </div>
           </div>
         </div>
       )}
+
 
       {/* Render Operator Console View */}
       {view === 'operator' && (
