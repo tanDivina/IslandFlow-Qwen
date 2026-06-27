@@ -99,6 +99,7 @@ function App() {
   const [tours, setTours] = useState([]);
   const [logistics, setLogistics] = useState([]);
   const [guests, setGuests] = useState([]);
+  const [guestMemories, setGuestMemories] = useState([]);
   const [itineraryMarkdown, setItineraryMarkdown] = useState('');
   const [messages, setMessages] = useState([]);
   const [agentLogs, setAgentLogs] = useState(['🤖 Simulation environment initialized. Ready for weather events.']);
@@ -451,6 +452,21 @@ function App() {
       const res = await fetch(url);
       if (!res.ok) throw new Error("Could not connect to FastAPI backend server.");
       const data = await res.json();
+
+      let fetchedMemories = [];
+      if (data.guest_id) {
+        try {
+          const memRes = await fetch(`${API_BASE}/api/guests/${data.guest_id}/memories`);
+          if (memRes.ok) {
+            const memData = await memRes.json();
+            if (memData.success && memData.memories) {
+              fetchedMemories = memData.memories;
+            }
+          }
+        } catch (memErr) {
+          console.error("Error fetching guest memories:", memErr);
+        }
+      }
       
       // Ignore stale responses to eliminate network race conditions and infinite loops
       if (requestId !== lastRequestRef.current) {
@@ -462,6 +478,7 @@ function App() {
         setTours(data.tours || []);
         setLogistics(data.logistics || []);
         setGuests(data.guests || []);
+        setGuestMemories(fetchedMemories);
         const brand = data.tenant_brand || null;
         setTenantBrand(brand);
         setTenantsList(data.tenants || []);
@@ -2123,7 +2140,32 @@ function App() {
               </a>
             </div>
           </div>
-          <div style={{ viewTransitionName: 'chat-widget' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'chat-widget' }}>
+            {/* 🧠 Guest Persistent Memory Sidebar Widget */}
+            <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>Guest Persistent Memory</h4>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
+                </div>
+              </div>
+              
+              {guestMemories && guestMemories.length > 0 ? (
+                <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {guestMemories.map((mem, i) => (
+                    <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                      {mem}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
+                  No memories extracted yet. Tell Qwen your allergies, preferences, or scheduling constraints to see them sync in real-time!
+                </div>
+              )}
+            </div>
+
             <ChatWidget 
               messages={messages} 
               onSendMessage={handleSendMessage} 
@@ -2381,6 +2423,33 @@ function App() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'control-panel' }}>
+            {/* 🧠 Guest Persistent Memory Sidebar Widget */}
+            <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
+                <div>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>
+                    Persistent Memory: {(guests || []).find(g => g && g._id === guestId)?.name || 'Guest'}
+                  </h4>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
+                </div>
+              </div>
+              
+              {guestMemories && guestMemories.length > 0 ? (
+                <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {guestMemories.map((mem, i) => (
+                    <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+                      {mem}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
+                  No memories extracted yet for this guest. Chat with them to record preferences!
+                </div>
+              )}
+            </div>
+
             <ControlPanel 
               logistics={logistics} 
               onSimulate={handleSimulate} 

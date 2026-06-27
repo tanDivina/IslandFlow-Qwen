@@ -12,6 +12,7 @@ from mcp_server import (
     execution_logs, cancel_booking, update_guest_profile, 
     get_current_coastal_advisory
 )
+from db import save_conversational_memory, get_conversational_memories
 
 load_dotenv()
 
@@ -34,6 +35,9 @@ Your primary responsibilities are:
      e. Ask the guest for their approval (human-in-the-loop). DO NOT execute the database update until they agree!
      f. Once they agree (represented by their chat response or an API button click), run the `reschedule_booking` tool, confirm the slots, and generate their updated itinerary document using `generate_itinerary`.
    - **Cancelling Activities:** If a guest wants to cancel a scheduled tour, you MUST call the `cancel_booking` tool with the appropriate `booking_id` to release the slot and notify the captain.
+4. Manage Conversational Memories:
+   - You have access to the guest's persistent memories in the Guest Context block. You must proactively customize all scheduling recommendations, restaurant reviews, or alternative proposals to respect these memories (e.g. if memories say they have a seafood allergy or hate snorkeling, never recommend snorkeling or seafood meals).
+   - If the guest mentions a new preference, constraint, allergy, or hate/dislike during your chat, you MUST immediately call the `save_conversational_memory` tool to store this persistent preference in their profile. Do NOT wait, do it immediately so it is saved for future sessions.
 
 Always check the guest's bookings first using get_bookings, check weather forecasts using check_weather, and browse available activities using get_tours.
 Be proactive. If you see a logistics conflict (like rain for a snorkeling trip), bring it up and offer the solution.
@@ -235,6 +239,44 @@ QWEN_TOOLS = [
                 "properties": {}
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "save_conversational_memory",
+            "description": "Save or record a persistent guest preference, constraint, allergy, or scheduling choice into the conversational memory database so that it persists across chat sessions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "guest_id": {
+                        "type": "string",
+                        "description": "The unique guest ID (e.g., 'g1')."
+                    },
+                    "memory_text": {
+                        "type": "string",
+                        "description": "The specific preference or constraint summary to record (e.g., 'Alex Mercer has a mild seafood allergy and dislikes snorkeling')."
+                    }
+                },
+                "required": ["guest_id", "memory_text"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_conversational_memories",
+            "description": "Retrieve all saved persistent conversational memories/preferences for a given guest.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "guest_id": {
+                        "type": "string",
+                        "description": "The unique guest ID."
+                    }
+                },
+                "required": ["guest_id"]
+            }
+        }
     }
 ]
 
@@ -247,7 +289,9 @@ TOOL_FUNCTIONS = {
     "generate_itinerary": generate_itinerary,
     "cancel_booking": cancel_booking,
     "update_guest_profile": update_guest_profile,
-    "get_current_coastal_advisory": get_current_coastal_advisory
+    "get_current_coastal_advisory": get_current_coastal_advisory,
+    "save_conversational_memory": save_conversational_memory,
+    "get_conversational_memories": get_conversational_memories
 }
 
 # --- Gemini ADK Setup ---
@@ -331,9 +375,16 @@ def run_qwen_agent(guest_id: str, user_message: str, history: list = None) -> tu
             if content:
                 messages.append({"role": role, "content": content})
                 
-    # 3. Add current user message
+    # 3. Add current user message with memories pre-fetched and injected for high-performance zero-shot memory retrieval
     current_date = datetime.date.today().strftime("%Y-%m-%d")
-    contextualized_prompt = f"[Guest Context: guest_id='{guest_id}', current_date='{current_date}']\nUser message: {user_message}"
+    try:
+        memories = get_conversational_memories(guest_id)
+        memories_str = "; ".join(memories) if memories else "None recorded yet."
+    except Exception as mem_ex:
+        logger.error(f"Failed to pre-fetch conversational memories: {mem_ex}")
+        memories_str = "None recorded yet."
+        
+    contextualized_prompt = f"[Guest Context: guest_id='{guest_id}', current_date='{current_date}', Guest Persistent Memories: {memories_str}]\nUser message: {user_message}"
     messages.append({"role": "user", "content": contextualized_prompt})
     
     headers = {

@@ -506,6 +506,28 @@ def get_tenants_data():
         }
     ]
 
+def get_memories_data():
+    return [
+        {
+            "_id": "m_1",
+            "guest_id": "g1",
+            "memory": "Alex Mercer prefers morning schedules, values wildlife adventures, and has a mild seafood allergy.",
+            "created_at": "2026-06-26 10:00:00"
+        },
+        {
+            "_id": "m_2",
+            "guest_id": "g2",
+            "memory": "Sarah Connor hates crowded places, loves marine biology, and prefers eco-friendly local experiences.",
+            "created_at": "2026-06-26 11:15:00"
+        },
+        {
+            "_id": "m_3",
+            "guest_id": "g3",
+            "memory": "Liam Neeson values privacy, prefers indoor/relaxation experiences, and dislikes loud noises.",
+            "created_at": "2026-06-26 12:30:00"
+        }
+    ]
+
 def seed_db():
     current_db, is_real = get_db()
     
@@ -539,6 +561,11 @@ def seed_db():
         for tenant in get_tenants_data():
             tenants_coll.replace_one({"_id": tenant["_id"]}, tenant, upsert=True)
             
+        # Seed Conversational Memories
+        memories_coll = current_db["conversational_memories"]
+        for memory in get_memories_data():
+            memories_coll.insert_one(memory)
+            
         logger.info("Successfully seeded database collections.")
     else:
         logger.info("Database already seeded. Ensuring all default tours exist...")
@@ -547,6 +574,13 @@ def seed_db():
             if tours_coll.count_documents({"_id": tour["_id"]}) == 0:
                 tours_coll.insert_one(tour)
                 logger.info(f"Inserted missing tour: {tour['name']} ({tour['_id']})")
+                
+        # Ensure seed conversational memories exist if none are found
+        memories_coll = current_db["conversational_memories"]
+        if memories_coll.count_documents({}) == 0:
+            for memory in get_memories_data():
+                memories_coll.insert_one(memory)
+            logger.info("Seeded initial conversational memories into existing database.")
                 
     # Always ensure default tenants are up-to-date with latest color, font, logo_url
     tenants_coll = current_db["tenants"]

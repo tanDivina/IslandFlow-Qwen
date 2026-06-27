@@ -248,3 +248,45 @@ def get_db():
         return MockDB("mock_db.json"), False
 
 db, is_real_mongo = get_db()
+
+# Conversational Memories Helper Functions
+import datetime
+
+def save_conversational_memory(guest_id: str, memory_text: str) -> bool:
+    """
+    Appends or updates a piece of conversational memory for a given guest.
+    Creates a memory entry under the 'conversational_memories' collection.
+    """
+    try:
+        guest_id_str = str(guest_id)
+        
+        # Check if memory already exists
+        existing = db['conversational_memories'].find_one({"guest_id": guest_id_str, "memory": memory_text})
+        if existing:
+            return True
+            
+        doc = {
+            "guest_id": guest_id_str,
+            "memory": memory_text,
+            "created_at": str(datetime.datetime.now()) if not is_real_mongo else datetime.datetime.utcnow()
+        }
+        db['conversational_memories'].insert_one(doc)
+        logger.info(f"Saved memory for guest {guest_id_str}: '{memory_text}'")
+        return True
+    except Exception as e:
+        logger.error(f"Error saving conversational memory: {e}")
+        return False
+
+def get_conversational_memories(guest_id: str) -> list:
+    """
+    Retrieves all persistent memory snippets for a given guest.
+    """
+    try:
+        guest_id_str = str(guest_id)
+        results = db['conversational_memories'].find({"guest_id": guest_id_str})
+        memories = [r["memory"] for r in results if "memory" in r]
+        return memories
+    except Exception as e:
+        logger.error(f"Error getting conversational memories: {e}")
+        return []
+

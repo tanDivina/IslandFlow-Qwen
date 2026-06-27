@@ -14,10 +14,11 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from dotenv import load_dotenv
 
-from db import db, is_real_mongo
+from db import db, is_real_mongo, get_conversational_memories, save_conversational_memory
 from mock_data import seed_db
 from agent import run_concierge_agent, clear_adk_session
 from mcp_server import reschedule_booking, generate_itinerary
+from ali_oss import upload_itinerary_to_oss
 
 load_dotenv()
 load_dotenv("backend/.env")
@@ -131,6 +132,9 @@ class ProposalPayload(BaseModel):
     new_date: str
     alternative_tour_id: str = None
     accepted: bool
+
+class ExportItineraryPayload(BaseModel):
+    guest_id: str
 
 class PMSSyncPayload(BaseModel):
     guest_id: str
@@ -717,6 +721,42 @@ async def generate_token_endpoint(payload: TokenGeneratePayload):
         logger.error(f"Error generating token: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/guests/{guest_id}/memories")
+async def get_guest_memories_endpoint(guest_id: str):
+    try:
+        memories = get_conversational_memories(guest_id)
+        return {
+            "success": True,
+            "guest_id": guest_id,
+            "memories": memories
+        }
+    except Exception as e:
+        logger.error(f"Error getting guest memories endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/export-itinerary")
+async def export_itinerary_endpoint(payload: ExportItineraryPayload):
+    try:
+        # Verify guest exists
+        guest = db["guests"].find_one({"_id": payload.guest_id})
+        if not guest:
+            raise HTTPException(status_code=404, detail="Guest not found")
+            
+        # Generate itinerary markdown using existing helper
+        itinerary_md = generate_itinerary(payload.guest_id)
+        
+        # Upload to Alibaba Cloud OSS (live or fallback simulation)
+        oss_url = upload_itinerary_to_oss(payload.guest_id, itinerary_md)
+        
+        return {
+            "success": True,
+            "guest_id": payload.guest_id,
+            "oss_url": oss_url
+        }
+    except Exception as e:
+        logger.error(f"Error exporting itinerary endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/reset")
 async def reset_simulation():
     """Reset database to initial seeded state (zero-out for repeat tests)."""
@@ -728,6 +768,7 @@ async def reset_simulation():
         db["logistics"].delete_many({})
         db["tenants"].delete_many({})
         db["dispatches"].delete_many({})
+        db["conversational_memories"].delete_many({})
         
         # Remove all guest itinerary files
         for file in os.listdir("."):

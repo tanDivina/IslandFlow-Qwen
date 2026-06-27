@@ -9,60 +9,32 @@
   --shadow-glow: none;
 }
 
-/* Sunny Mode (Premium Sunset Coast - Deep Obsidian & Gold) */
-body, body.theme-sunny {
-  --bg-color: hsl(210, 32%, 5%);
-  --panel-bg: hsla(210, 32%, 8%, 0.85);
-  --border-color: hsla(38, 45%, 60%, 0.16);
-  --border-glow: hsla(38, 45%, 60%, 0.35);
+/* Premium Dark Glassmorphism Theme (Pitch Black backdrop, Deep Charcoal containers, Neon Green primary accents) */
+body, body.theme-sunny, body.theme-rainy {
+  --bg-color: #050507;
+  --panel-bg: rgba(12, 12, 15, 0.8);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-glow: rgba(168, 255, 53, 0.1);
   
-  --primary: hsl(38, 45%, 60%);        /* Champagne Gold */
-  --primary-glow: hsla(38, 45%, 60%, 0.12);
-  --accent: hsl(188, 55%, 38%);        /* Sea Ocean Turquoise */
-  --accent-glow: hsla(188, 55%, 38%, 0.15);
-  --warning: hsl(35, 80%, 55%);        /* Sunset Amber */
-  --warning-glow: hsla(35, 80%, 55%, 0.15);
-  --error: hsl(352, 75%, 55%);         /* Deep Coral Red */
-  --error-glow: hsla(352, 75%, 55%, 0.15);
+  --primary: #a8ff35;                  /* Vibrant Neon Green */
+  --primary-glow: rgba(168, 255, 53, 0.08);
+  --accent: #7cd315;                   /* Accent Alt Green */
+  --accent-glow: rgba(124, 211, 21, 0.08);
+  --warning: #fbbf24;                  /* Warning Amber */
+  --warning-glow: rgba(251, 191, 36, 0.08);
+  --error: #ef4444;                    /* Error Red */
+  --error-glow: rgba(239, 68, 68, 0.08);
   
-  --text-primary: hsl(38, 20%, 94%);   /* Fine Ivory Silk */
-  --text-muted: hsl(210, 15%, 75%);    /* Misty Silver */
-  --text-dim: hsl(210, 10%, 52%);      /* Dark Slate */
+  --text-primary: #f3f4f6;             /* Premium Ice White */
+  --text-muted: #9ca3af;               /* Muted Silver Gray */
+  --text-dim: #6b7280;                 /* Dim Gray */
   
-  --slot-bg: hsla(210, 32%, 11%, 0.75);
-  --slot-empty-bg: hsla(210, 32%, 7%, 0.35);
-  --msg-user-bg: hsla(38, 45%, 60%, 0.1);
-  --msg-agent-bg: hsla(188, 55%, 38%, 0.1);
+  --slot-bg: rgba(255, 255, 255, 0.03);
+  --slot-empty-bg: rgba(255, 255, 255, 0.01);
+  --msg-user-bg: rgba(168, 255, 53, 0.08);
+  --msg-agent-bg: rgba(255, 255, 255, 0.03);
   
-  background-image: none;
-}
-
-/* Rainy Mode (Cozy Stormy Harbor - Deeper Steel Slate & Sand) */
-body.theme-rainy {
-  --bg-color: hsl(222, 28%, 4%);
-  --panel-bg: hsla(222, 28%, 7%, 0.85);
-  --border-color: hsla(222, 12%, 50%, 0.15);
-  --border-glow: hsla(222, 22%, 55%, 0.3);
-  
-  --primary: hsl(222, 22%, 58%);       /* Stormy Steel Blue */
-  --primary-glow: hsla(222, 22%, 58%, 0.08);
-  --accent: hsl(38, 35%, 50%);         /* Antique Muted Gold */
-  --accent-glow: hsla(38, 35%, 50%, 0.08);
-  --warning: hsl(35, 65%, 48%);
-  --warning-glow: hsla(35, 65%, 48%, 0.08);
-  --error: hsl(352, 60%, 48%);
-  --error-glow: hsla(352, 60%, 48%, 0.08);
-  
-  --text-primary: hsl(222, 12%, 88%);
-  --text-muted: hsl(222, 8%, 70%);
-  --text-dim: hsl(222, 6%, 52%);
-  
-  --slot-bg: hsla(222, 28%, 10%, 0.75);
-  --slot-empty-bg: hsla(222, 28%, 6%, 0.3);
-  --msg-user-bg: hsla(222, 22%, 58%, 0.08);
-  --msg-agent-bg: hsla(38, 35%, 50%, 0.08);
-  
-  background-image: none;
+  background-image: radial-gradient(circle at 50% -20%, rgba(168, 255, 53, 0.12) 0%, rgba(5, 5, 7, 0) 60%);
 }
 
 * {
