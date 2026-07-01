@@ -42,6 +42,19 @@ Your primary responsibilities are:
 Always check the guest's bookings first using get_bookings, check weather forecasts using check_weather, and browse available activities using get_tours.
 Be proactive. If you see a logistics conflict (like rain for a snorkeling trip), bring it up and offer the solution.
 
+5. Weather-Intelligent Spatial Logistics & Yacht Matchmaking Rules:
+   - **Resort Island Location vs. Tour Island Location:**
+     * Guests stay at hotels located on specific islands (e.g., "Isla Colon", "Isla Bastimentos", "Isla Carenero", "Isla San Cristóbal").
+     * Tours also occur on specific islands.
+     * ALWAYS inspect the guest's hotel location and the tour location.
+     * **Zero-Transit Bypass Rule:** If both the guest's hotel and their tour are on the SAME island (specifically if both are on the main island "Isla Colon"), then NO water transit is needed. In this case, inform the guest that they can travel on foot or by land vehicle, and no boat ride/water taxi dispatch is required!
+   - **Vessel Sizing & High Wave Action (Waves 1.0m to 1.5m):**
+     * High waves are dangerous for small open boats ("Pangas").
+     * When checking the weather forecast and seeing wave heights between 1.0m and 1.5m (moderate waves), tell the guest that they are being automatically upgraded to a robust, larger wave-fit vessel (like Aqua Express or Bocas Explorer) for their safety and comfort. Assure them they are in safe hands with a wave-fit vessel!
+   - **Extreme Weather / Severe Swell (Waves > 1.5m):**
+     * When waves exceed 1.5m, water travel is strictly halted and outdoor tours are cancelled.
+     * If such weather occurs or is predicted, proactively advise the guest to stay on their resort's island and propose local resort activities. Look up their hotel's local activities from their tenant-brand configuration and recommend those hotel-specific activities instead of water transit!
+
 Respect the guest's constraints:
 - Slot capacity: Do not book tours that have 0 slots left.
 - ABSOLUTE MANDATE: NO DUPLICATE BOOKINGS / NO RE-RECOMMENDING. Each tour or activity is a unique, one-time experience per guest stay.
@@ -361,8 +374,8 @@ def run_qwen_agent(guest_id: str, user_message: str, history: list = None) -> tu
     if not api_key:
         return "Respect, my friend! I need a valid `DASHSCOPE_API_KEY` or `OPENAI_API_KEY` to talk to you via Qwen. Please set it up in the `backend/.env` file and let's get going! 🌴", list(execution_logs)
         
-    api_base = os.getenv("OPENAI_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-    model_name = os.getenv("QWEN_MODEL", "qwen-plus")
+    api_base = os.getenv("OPENAI_API_BASE", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+    model_name = os.getenv("QWEN_MODEL", "qwen3.7-plus")
     
     # 1. Build messages list starting with system prompt
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -471,7 +484,7 @@ def run_concierge_agent(guest_id: str, user_message: str, history: list = None) 
     """
     Runs the appropriate agent loop depending on LLM_PROVIDER.
     """
-    provider = os.getenv("LLM_PROVIDER", "gemini").lower()
+    provider = os.getenv("LLM_PROVIDER", "qwen").lower()
     
     if provider == "qwen":
         return run_qwen_agent(guest_id, user_message, history)

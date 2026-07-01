@@ -39,7 +39,8 @@ def get_tours_data(dates):
                 dates["d1"]: 10,
                 dates["d2"]: 10
             },
-            "tags": ["wildlife", "adventure", "water"]
+            "tags": ["wildlife", "adventure", "water"],
+            "island": "Cayos Zapatilla"
         },
         {
             "_id": "t2",
@@ -54,7 +55,8 @@ def get_tours_data(dates):
                 dates["d1"]: 6,
                 dates["d2"]: 8
             },
-            "tags": ["adventure", "forest"]
+            "tags": ["adventure", "forest"],
+            "island": "Isla Bastimentos"
         },
         {
             "_id": "t3",
@@ -69,7 +71,8 @@ def get_tours_data(dates):
                 dates["d1"]: 12,
                 dates["d2"]: 12
             },
-            "tags": ["wildlife", "hiking", "forest"]
+            "tags": ["wildlife", "hiking", "forest"],
+            "island": "Isla Bastimentos"
         },
         {
             "_id": "t4",
@@ -84,7 +87,8 @@ def get_tours_data(dates):
                 dates["d1"]: 12,
                 dates["d2"]: 12
             },
-            "tags": ["food", "culture", "indoor"]
+            "tags": ["food", "culture", "indoor"],
+            "island": "Isla San Cristóbal"
         },
         {
             "_id": "t5",
@@ -99,7 +103,8 @@ def get_tours_data(dates):
                 dates["d1"]: 8,
                 dates["d2"]: 8
             },
-            "tags": ["food", "culture", "indoor"]
+            "tags": ["food", "culture", "indoor"],
+            "island": "Isla Bastimentos"
         },
         {
             "_id": "t6",
@@ -114,7 +119,8 @@ def get_tours_data(dates):
                 dates["d1"]: 4,
                 dates["d2"]: 4
             },
-            "tags": ["relaxation", "indoor"]
+            "tags": ["relaxation", "indoor"],
+            "island": "Isla Carenero"
         },
         {
             "_id": "t7",
@@ -129,7 +135,8 @@ def get_tours_data(dates):
                 dates["d1"]: 20,
                 dates["d2"]: 20
             },
-            "tags": ["culture", "history", "indoor"]
+            "tags": ["culture", "history", "indoor"],
+            "island": "Isla Colon"
         },
         {
             "_id": "t8",
@@ -144,7 +151,8 @@ def get_tours_data(dates):
                 dates["d1"]: 12,
                 dates["d2"]: 12
             },
-            "tags": ["indoor", "food", "culture", "farm", "nature"]
+            "tags": ["indoor", "food", "culture", "farm", "nature"],
+            "island": "Isla Solarte"
         },
         {
             "_id": "t9",
@@ -159,7 +167,8 @@ def get_tours_data(dates):
                 dates["d1"]: 15,
                 dates["d2"]: 15
             },
-            "tags": ["indoor", "social", "games", "culture"]
+            "tags": ["indoor", "social", "games", "culture"],
+            "island": "Isla Colon"
         },
         {
             "_id": "t10",
@@ -174,7 +183,8 @@ def get_tours_data(dates):
                 dates["d1"]: 15,
                 dates["d2"]: 15
             },
-            "tags": ["wildlife", "nature", "conservation", "sloths"]
+            "tags": ["wildlife", "nature", "conservation", "sloths"],
+            "island": "Isla Bastimentos"
         },
         {
             "_id": "t11",
@@ -189,7 +199,8 @@ def get_tours_data(dates):
                 dates["d1"]: 8,
                 dates["d2"]: 8
             },
-            "tags": ["food", "culture", "cooking", "indoor"]
+            "tags": ["food", "culture", "cooking", "indoor"],
+            "island": "Isla Bastimentos"
         },
         {
             "_id": "t12",
@@ -204,7 +215,8 @@ def get_tours_data(dates):
                 dates["d1"]: 12,
                 dates["d2"]: 12
             },
-            "tags": ["indoor", "science", "art", "ecology", "culture"]
+            "tags": ["indoor", "science", "art", "ecology", "culture"],
+            "island": "Isla Bastimentos"
         }
     ]
 
@@ -452,6 +464,13 @@ def get_logistics_data(dates):
         {"_id": "l_02", "date": dates["d3"], "weather": "Sunny", "alert": "none", "wave_height": 0.6, "wave_status": "safe"}
     ]
 
+CAPTAINS_CATALOG = [
+    {"_id": "c1", "name": "Capitán Jose", "vessel": "Panga Blanca", "size": "small", "weather_fit": ["calm"]},
+    {"_id": "c2", "name": "Capitán Mateo", "vessel": "Aqua Express", "size": "large", "weather_fit": ["calm", "rough", "extreme"]},
+    {"_id": "c3", "name": "Capitán Carlos", "vessel": "Mar Azul", "size": "small", "weather_fit": ["calm"]},
+    {"_id": "c4", "name": "Capitán Eduardo", "vessel": "Bocas Explorer", "size": "large", "weather_fit": ["calm", "rough", "extreme"]}
+]
+
 def get_tenants_data():
     return [
         {
@@ -462,7 +481,9 @@ def get_tenants_data():
             "font": "Inter, system-ui, sans-serif",
             "welcome_message": "Your luxury overwater villa experience begins now. Pura vida! 🌴",
             "logo_url": None,
-            "theme": "theme-ocean"
+            "theme": "theme-ocean",
+            "location": "Isla Bastimentos",
+            "activities": ["Snorkeling", "Kayaking", "Overwater Dinner", "Private Beach Picnic"]
         },
         {
             "_id": "hotel_lacoralina",
@@ -472,7 +493,9 @@ def get_tenants_data():
             "font": "var(--font-serif), Georgia, serif",
             "welcome_message": "Welcome to your Balinese wellness sanctuary in the Caribbean. Pura vida! 🌸",
             "logo_url": None,
-            "theme": "theme-wellness"
+            "theme": "theme-wellness",
+            "location": "Isla Colon",
+            "activities": ["Surfing", "Beach Yoga", "Spa Massage", "Oceanfront Dinning"]
         },
         {
             "_id": "hotel_sweetbocas",
@@ -482,7 +505,9 @@ def get_tenants_data():
             "font": "Outfit, Poppins, system-ui, sans-serif",
             "welcome_message": "Step into absolute, sustainable luxury on our private island estate. Respect! 🌺",
             "logo_url": None,
-            "theme": "theme-hibiscus"
+            "theme": "theme-hibiscus",
+            "location": "Isla San Cristóbal",
+            "activities": ["Paddleboarding", "Private Chef Dining", "Mangrove Tour", "Organic Farm Walk"]
         },
         {
             "_id": "hotel_bocasvillas",
@@ -492,7 +517,9 @@ def get_tenants_data():
             "font": "Roboto, system-ui, sans-serif",
             "welcome_message": "Your boutique cliffside eco-villa retreat is ready, my friend. No stress! 🦜",
             "logo_url": None,
-            "theme": "theme-forest"
+            "theme": "theme-forest",
+            "location": "Isla Colon",
+            "activities": ["Cliffside Hiking", "Ocean Viewing", "Sunbathing", "Seaside Sunset Cocktails"]
         },
         {
             "_id": "hotel_redfrog",
@@ -502,7 +529,9 @@ def get_tenants_data():
             "font": "Poppins, Inter, system-ui, sans-serif",
             "welcome_message": "Welcome to our vibrant beachfront jungle playground. Pura vida! 🐸",
             "logo_url": None,
-            "theme": "theme-volcano"
+            "theme": "theme-volcano",
+            "location": "Isla Bastimentos",
+            "activities": ["Zipline Canopy", "Rainforest Hiking", "Beach Volleyball", "Turtle Nesting Patrol"]
         }
     ]
 
@@ -561,6 +590,11 @@ def seed_db():
         for tenant in get_tenants_data():
             tenants_coll.replace_one({"_id": tenant["_id"]}, tenant, upsert=True)
             
+        # Seed Captains Catalog
+        cap_coll = current_db["captains"]
+        for cap in CAPTAINS_CATALOG:
+            cap_coll.replace_one({"_id": cap["_id"]}, cap, upsert=True)
+            
         # Seed Conversational Memories
         memories_coll = current_db["conversational_memories"]
         for memory in get_memories_data():
@@ -581,6 +615,11 @@ def seed_db():
             for memory in get_memories_data():
                 memories_coll.insert_one(memory)
             logger.info("Seeded initial conversational memories into existing database.")
+            
+        # Ensure all captains exist in database
+        cap_coll = current_db["captains"]
+        for cap in CAPTAINS_CATALOG:
+            cap_coll.replace_one({"_id": cap["_id"]}, cap, upsert=True)
                 
     # Always ensure default tenants are up-to-date with latest color, font, logo_url
     tenants_coll = current_db["tenants"]

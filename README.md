@@ -1,134 +1,163 @@
-# 🏝️ Bocas del Toro Concierge: Local Experience & Eco-Tourism Coordinator
-### MongoDB Track — Google Cloud Rapid Agent Hackathon
+# 🏝️ IslandFlow: Weather-Intelligent Eco-Tourism Concierge & MemoryAgent
 
-Welcome to the **Bocas del Toro Concierge**! This project is an autonomous AI concierge and logistics dispatcher designed for boutique hotels, eco-lodges, and local activity operators in Bocas del Toro, Panama. 
+### **Track 1: MemoryAgent — Global AI Hackathon Series with Qwen Cloud**
 
-By integrating **Gemini 2.5**, **Model Context Protocol (MCP)**, and **MongoDB**, this agent moves "beyond chat" to actively manage guest itineraries, monitor live weather reports, automatically propose indoor reschedules when storms threaten outdoor bookings, and commit transactions back to MongoDB.
+Welcome to **IslandFlow**! This project is an autonomous, weather-intelligent AI concierge and water transit logistics dispatcher designed for boutique hotels, eco-lodges, and local excursion operators in Bocas del Toro, Panama. 
+
+By integrating **Qwen Cloud Models (via DashScope)**, **Model Context Protocol (MCP)**, **MongoDB**, and **Alibaba Cloud Object Storage Service (OSS)**, IslandFlow moves "beyond chat" to actively manage guest itineraries, monitor live marine weather forecasts, automatically upgrade vessel sizes based on ocean swell, and instantly broadcast dispatch warnings to sea captains when schedules change.
 
 ---
 
-## 📸 Project Showcase & Key Features
+## 🚀 Key Hackathon Highlights & Track Focus
 
-*   **Warm Afro-Caribbean Persona:** The agent interacts with guests using a warm, hospitable island tone (*"no stress", "Pura vida", "respect"*).
-*   **Dual Database Adaptability:** Detects your MongoDB configuration dynamically. If no Atlas URI is provided, it falls back to a high-fidelity, file-backed JSON Mock DB with transaction simulation.
-*   **Real-time Weather Dispatcher:** Simulates weather forecasts. If a rainy/stormy forecast affects an outdoor booking, the agent automatically structures a replan proposal.
-*   **Human-in-the-Loop Rescheduling:** The agent does not force database writes. It surfaces an **interactive swap proposal card** in the UI chat for the guest to Approve or Decline.
-*   **Live MCP Reasoning Log Console:** A scrolling developer panel displays step-by-step logs of the agent's MCP tool calls (e.g., `get_bookings`, `check_weather`, `reschedule_booking`, `generate_itinerary`).
-*   **Official printable Travel Receipts:** Displays a live rendering of the official trip itinerary document, formatted in Markdown, which can be printed instantly.
+### **1. Track 1: MemoryAgent — Persistent Cognitive Memory**
+To excel in the **MemoryAgent** track, IslandFlow implements a high-performance cross-session persistent cognitive layer:
+* **Asynchronous Preference Extraction**: When a guest chats with the concierge (e.g., *"I have a severe peanut allergy"* or *"I hate snorkeling, too crowded"*), the Qwen agent immediately captures this preference and calls the `save_conversational_memory` tool to store it in the `conversational_memories` collection.
+* **High-Performance Zero-Shot Context Injection**: For all future conversations and sessions, the guest's profile is loaded, and their persistent memories are injected directly into the Qwen prompt context. The agent immediately personalizes its recommendations, restaurant bookings, and tour proposals without needing redundant tool calls or losing memory on page refreshes.
+
+### **2. Proof of Alibaba Cloud API Usage (OSS Integration)**
+To satisfy the official requirement of demonstrating direct usage of Alibaba Cloud services, we have integrated the **Alibaba Cloud Object Storage Service (OSS)**:
+* **The Flow**: When a guest's itinerary is finalized, updated, or exported, the backend compiles a beautiful Markdown receipt and uploads it directly to an Alibaba Cloud OSS bucket using the official `oss2` Python SDK.
+* **Verification**: The backend returns a signed, secure OSS URL (valid for 24 hours) for the guest to view or download.
+* **Code Proof**: The entire implementation is located in [backend/ali_oss.py](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/backend/ali_oss.py), demonstrating direct interaction with Alibaba Cloud APIs.
+
+### **3. Weather-Intelligent Logistics & Spatial Dispatch**
+* **Zero-Transit Spatial Bypass**: No water taxi is dispatched if the tour and hotel reside on the mainland (*Isla Colon*).
+* **Wave Action Captain Matching**: Waves between $1.0\text{m}$ and $1.5\text{m}$ trigger an automatic upgrade to a robust `"large"` vessel.
+* **Severe Swell Grounding**: Waves $>1.5\text{m}$ block outdoor tours entirely, prompting Qwen to cancel them, alert captains, and recommend local resort-level activities.
 
 ---
 
 ## 🏗️ Architecture
 
-The application is split into a **Python FastAPI** backend and a **React + Vite** frontend.
-
 ```mermaid
 graph TD
     A[React + Vite Frontend] -->|REST API Calls| B[FastAPI Backend Server]
-    B -->|Generative Loop| C[Gemini 2.5 Agent Orchestrator]
+    B -->|Generative Reasoning Loop| C[Qwen-Plus / Qwen-Turbo Agent]
     C -->|MCP Tool Execution| D[FastMCP Server]
-    D -->|Read/Write Operations| E[MongoDB Atlas / JSON Mock DB]
+    D -->|Read/Write Operations| E[MongoDB / JSON Mock DB]
     D -->|Check weather forecast| F[Weather Log Service]
-    E -->|Updates state| A
+    B -->|SDK put_object| G[Alibaba Cloud OSS Bucket]
+    G -->|Returns Signed URLs| A
+    E -->|Updates State| A
 ```
 
-*   **`backend/db.py`**: Handles MongoDB Atlas connections or handles operations using `MockCollection` (supporting dot-notation path updates and nested dictionary modifications).
-*   **`backend/mcp_server.py`**: Exposes FastMCP tools (`get_tours`, `get_bookings`, `check_weather`, `reschedule_booking`, `generate_itinerary`).
-*   **`backend/agent.py`**: Runs the Gemini generative reasoning loop with system instructions. Implements lazy initialization to avoid boot-time crashes if API keys are missing.
-*   **`frontend/src/App.jsx`**: Manages timeline views, chat streams, simulation logs, and handles proposal approvals.
-*   **`frontend/src/index.css`**: Renders custom glassmorphic panels and dark ocean styling.
+*   **[backend/ali_oss.py](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/backend/ali_oss.py)**: Handles direct upload of itineraries to Alibaba Cloud OSS using the `oss2` library, falling back to a Sandbox Simulation Mode if credentials are not configured.
+*   **[backend/agent.py](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/backend/agent.py)**: Houses the system prompts and the main `run_qwen_agent` loop. Features zero-shot memory context pre-fetching.
+*   **[backend/mcp_server.py](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/backend/mcp_server.py)**: Defines FastMCP tools (`get_tours`, `get_bookings`, `check_weather`, `add_booking`, `reschedule_booking`, `generate_itinerary`). Exposes geographical spatial rules and wave height filtering.
+*   **[backend/db.py](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/backend/db.py)**: Establishes a connection to MongoDB Atlas, supporting a local, high-fidelity file-backed JSON Mock DB (`mock_db.json`) fallback on startup.
+*   **[frontend/src/App.jsx](file:///Users/dorienvandenabbeele/Downloads/IslandFlow%20-%20Qwen%20Hackathon/frontend/src/App.jsx)**: A stunning, responsive operator dashboard built with dark glassmorphism schemes, housing the **Live Captain Notifications Panel** and a scrolling developer console that displays the agent's live MCP reasoning logs.
 
 ---
 
 ## 🚀 Setup & Execution
 
 ### 1. Prerequisites
-*   **Python 3.12** or higher
-*   **Node.js** (v18+) and **npm**
-*   **Gemini API Key** (Get one at [Google AI Studio](https://aistudio.google.com/))
+* **Python 3.12** or higher
+* **Node.js** (v18+) and **npm**
+* **DashScope API Key** (or standard OpenAI API key for Qwen)
+* **Alibaba Cloud Access Key & Secret** (for OSS uploads)
 
 ---
 
 ### 2. Backend Setup
 
-1.  Navigate to the backend directory:
-    ```bash
-    cd backend
-    ```
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-2.  Copy `.env.example` to `.env`:
-    ```bash
-    cp .env.example .env
-    ```
+2. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
 
-3.  Configure your environment in `.env`:
-    *   `GEMINI_API_KEY`: Paste your Google Gemini API key.
-    *   `MONGO_URI` (Optional): To run with a live MongoDB instance, paste your Connection URI here. If left blank, the app runs on the high-fidelity mock fallback out of the box!
+3. Configure your credentials in `.env`:
+   * `LLM_PROVIDER=qwen`
+   * `OPENAI_API_BASE`: Choose your API base URL:
+     * Standard Free Trial: `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`
+     * Token Plan: `https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1`
+   * `DASHSCOPE_API_KEY`: Paste your DashScope/Qwen API key.
+   * `QWEN_MODEL=qwen3.7-plus`
+   * `ALI_OSS_ACCESS_KEY_ID`: Your Alibaba Cloud Access Key ID.
+   * `ALI_OSS_ACCESS_KEY_SECRET`: Your Alibaba Cloud Access Key Secret.
+   * `ALI_OSS_ENDPOINT`: Your OSS region endpoint (e.g. `oss-ap-southeast-1.aliyuncs.com`).
+   * `ALI_OSS_BUCKET`: Your target OSS bucket name.
 
-4.  Activate the python virtual environment:
-    ```bash
-    source venv/bin/activate
-    ```
-
-5.  Start the FastAPI backend:
-    ```bash
-    python main.py
-    ```
-    The server will startup on `http://localhost:8000`.
+4. Start the FastAPI backend:
+   ```bash
+   venv/bin/python main.py
+   ```
+   The backend server will spin up on `http://localhost:8000`.
 
 ---
 
 ### 3. Frontend Setup
 
-1.  Navigate to the frontend directory:
-    ```bash
-    cd ../frontend
-    ```
+1. Navigate to the frontend directory:
+   ```bash
+   cd ../frontend
+   ```
 
-2.  Install dependencies:
-    ```bash
-    npm install
-    ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-3.  Run the Vite development server:
-    ```bash
-    npm run dev
-    ```
-    Open your browser and navigate to `http://localhost:5173`.
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   Open your browser and navigate to `http://localhost:5173`.
 
 ---
 
 ## 🕹️ Interactive Simulation Walkthrough
 
-Follow these steps to demonstrate the autonomous agent capabilities:
+Follow these steps to demonstrate IslandFlow's persistent memory and weather-intelligent dispatching capabilities:
 
-1.  **Initial View:** Notice that the **🏝️ Stay Schedule Timeline** shows **Alex Mercer** has two outdoor bookings:
-    *   *May 30 (Morning):* Cayos Zapatilla Reef Snorkeling (Outdoor, $45)
-    *   *May 31 (Afternoon):* Bastimentos Canopy Zip Line (Outdoor, $65)
-2.  **Weather Simulation:** In the **⚙️ Operator Control Panel** (bottom right):
-    *   Set the date to **May 30, 2026**.
-    *   Set the Weather to **Heavy Rain**.
-    *   Set the Weather Alert Status to **Rain Warning**.
-    *   Click **Trigger Weather Shift**.
-3.  **Agent Assessment:**
-    *   The database updates to "Heavy Rain" on May 30.
-    *   The agent runs an automated inspection, logs the MCP calls in the log console, and reports in the chat: *"Oh my friend, I see we have a storm warning on May 30..."*
-    *   It identifies **Green Cacao Chocolate Workshop** (Indoor) as an alternative.
-    *   An **interactive proposal card** appears in the chat widget: *"Swap Cayos Zapatilla Snorkeling for Green Cacao Chocolate Workshop"*.
-4.  **Confirm Swap:**
-    *   Click **Confirm Swap** in the card.
-    *   The frontend calls `/api/respond-proposal`, executing the database transactions.
-    *   The timeline calendar updates: May 30 now shows the **Green Cacao Chocolate Workshop**.
-    *   The **Itinerary Document** updates on the page, showing the Chocolate Workshop and a recalculated total price ($100 instead of $110).
-    *   The available slots inside the database are decremented/incremented securely.
-5.  **Try Chatting:** Type *"What's on my schedule?"* in the chat box. The agent will inspect MongoDB and give you a warm, updated list of activities!
-6.  **Reset:** Click **Reset DB** at any time to return the database to the initial seeded state.
+1. **Verify Persistent Memory (Track 1)**:
+   * Select a guest profile in the UI (e.g., **Alex Mercer**).
+   * Open the chat box and type: *"I have a severe allergy to shellfish, make sure to save that!"*
+   * The Qwen agent will call `save_conversational_memory` behind the scenes.
+   * Look at the **Guest Persistent Memories** dashboard widget on the page. It will automatically update in real-time, displaying: *"severe allergy to shellfish"*.
+   * Refresh the page or change profiles and switch back; the memory is fully persistent!
+
+2. **Trigger Weather Shift**:
+   * Change the date to **May 30, 2026** in the operator panel.
+   * Set the Weather to **Heavy Rain** and Wave Height to **1.8m** (danger threshold).
+   * Click **Trigger Weather Shift**.
+
+3. **Observe Autonomous Planning**:
+   * Qwen detects that Alex has an outdoor snorkeling booking on May 30th.
+   * Since waves exceed $1.5\text{m}$, the agent blocks the tour and automatically looks up Alex's hotel local activities (from the `tenants` DB collection).
+   * Qwen alerts the guest and presents an interactive **Schedule Proposal Card** in the chat, proposing a safe on-site activity (e.g., *Green Cacao Chocolate Workshop*).
+
+4. **Confirm Proposal & Watch Live Dispatch Broadcasting**:
+   * Click **Confirm Swap** inside the chat proposal card.
+   * The backend registers the changes, cancels the transit dispatch, and **instantly broadcasts** a cancellation warning to the captain.
+   * Switch to Sub-Tab 2 (**Dispatch Ledger**) in the dashboard. You will see a flashing **Live Captain Notifications** glass panel showing an active, real-time warning broadcast: *"🚨 NOTIFICACIÓN INMEDIATA: Capitán ... su traslado ha sido CANCELADO."*
+
+5. **Export to Alibaba Cloud OSS**:
+   * Click the **Export to Alibaba Cloud OSS** button.
+   * The backend compiles a Markdown travel receipt, uploads it natively to Alibaba Cloud OSS, and returns a secure, signed public download URL.
 
 ---
 
-## 🏆 Hackathon Compliance & MCP Focus
+## 🏆 Judging Criteria Alignment
 
-This application fully conforms to the **MongoDB track** and **MCP Standards**:
-1.  **Model Context Protocol (MCP):** The agent performs database transactions and weather reports through formal schemas using Python's `FastMCP` framework.
-2.  **Autonomous Operations:** Rather than simple text generation, the agent reads current logistics schedules and writes changes back to MongoDB collections dynamically.
-3.  **Human-in-the-Loop:** Safety is integrated through conversational callbacks, validating that LLM planning output passes user confirmation before updating persistent states.
+* **Innovation & AI Creativity (30%)**: Dual-purpose use of Qwen as a conversational memory agent and logical dispatcher utilizing real-time Model Context Protocol (MCP) tooling.
+* **Technical Depth & Engineering (30%)**: Extremely clean, modular Python/React code, featuring native Alibaba Cloud OSS SDK integration and a dynamic Mongo DB / Mock DB transaction system.
+* **Problem Value & Impact (25%)**: Addresses critical logistical pain points in tropical marine transport, increasing safety for both guests and sea captains.
+* **Presentation & Documentation (15%)**: Comprehensive step-by-step interactive walkthrough, fully documented architecture diagram, and explicit links to integration code proofs.
+
+---
+
+## ☁️ Alibaba Cloud Deployment (Devpost Proof)
+
+To satisfy the mandatory Devpost requirement of **Proof of Deployment on Alibaba Cloud** (including the screenshot of running resources from your Alibaba Cloud Workbench):
+1. Refer to the detailed **[submission_guide.md](.agents/../submission_guide.md)** or checkout the `/submission_guide.md` file in this repository.
+2. It contains step-by-step instructions on spinning up an **Alibaba Cloud Elastic Compute Service (ECS)** instance, deploying the IslandFlow Docker containers, and capturing the specific **Workbench Console** screenshot required for your submission.
+
+---
+

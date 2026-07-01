@@ -421,6 +421,9 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
             db["bookings"].delete_many({})
             db["logistics"].delete_many({})
             db["tenants"].delete_many({})
+            db["dispatches"].delete_many({})
+            db["captain_notifications"].delete_many({})
+            db["conversational_memories"].delete_many({})
             # Remove all mock itineraries
             for file in os.listdir("."):
                 if file.startswith("mock_itinerary_") and file.endswith(".md"):
@@ -441,9 +444,10 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
         logistics = list(db["logistics"].find({}))
         tenants = list(db["tenants"].find({}))
         dispatches = list(db["dispatches"].find({}))
+        captain_notifications = list(db["captain_notifications"].find({}))
         
         # Clean mongo ObjectId to string for JSON serialization
-        for collection in [tours, bookings, guests, logistics, tenants, dispatches]:
+        for collection in [tours, bookings, guests, logistics, tenants, dispatches, captain_notifications]:
             for doc in collection:
                 if "_id" in doc:
                     doc["_id"] = str(doc["_id"])
@@ -490,6 +494,7 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
             "logistics": logistics,
             "tenants": tenants,
             "dispatches": dispatches,
+            "captain_notifications": captain_notifications,
             "itinerary_markdown": itinerary_md,
             "tenant_brand": tenant_brand,
             "secure_token_active": token_valid,
@@ -769,6 +774,7 @@ async def reset_simulation():
         db["tenants"].delete_many({})
         db["dispatches"].delete_many({})
         db["conversational_memories"].delete_many({})
+        db["captain_notifications"].delete_many({})
         
         # Remove all guest itinerary files
         for file in os.listdir("."):

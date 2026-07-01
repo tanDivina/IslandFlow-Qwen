@@ -316,33 +316,62 @@ def add_booking(guest_id: str, tour_id: str, date: str, slot: str = "morning") -
 
         # 4. Generate dynamic Spanish/English captain dispatch orders
         try:
-            captains = ["Capitán Jose", "Capitán Mateo", "Capitán Carlos", "Capitán Eduardo"]
-            boats = ["Panga Blanca", "Aqua Express", "Mar Azul", "Bocas Explorer"]
-            captain = random.choice(captains)
-            boat = random.choice(boats)
+            # Check spatial / geography rules
+            hotel_id = guest.get("hotel_id")
+            hotel = db["tenants"].find_one({"_id": hotel_id}) if hotel_id else None
+            guest_island = hotel.get("location") if hotel else "Isla Colon"
+            tour_island = target_tour.get("island", "Isla Colon")
             
-            tour_name = target_tour["name"]
-            guest_name = guest["name"]
+            bypass_transit = (guest_island == "Isla Colon" and tour_island == "Isla Colon")
             
-            sms_guest = f"Hi {guest_name}! Your water taxi transit for {tour_name} has been confirmed. Captain {captain} on {boat} will pick you up at {slot == 'morning' and '8:30 AM' or '1:30 PM'}."
-            sms_captain = f"Hola {captain}, traslado para el tour {tour_name} confirmado. Cliente: {guest_name}. Recogida en el hotel a las {slot == 'morning' and '8:30 AM' or '1:30 PM'}. Barco: {boat}."
-            
-            dispatch_doc = {
-                "guest_id": guest_id,
-                "booking_id": booking_id,
-                "captain": captain,
-                "boat": boat,
-                "route": f"Hotel Resort ➔ {target_tour['location']}",
-                "status": "confirmed",
-                "time": slot == 'morning' and '08:30' or '13:30',
-                "sms_guest": sms_guest,
-                "sms_captain": sms_captain,
-                "date": date,
-                "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
-            }
-            
-            db["dispatches"].insert_one(dispatch_doc)
-            add_execution_log(f"🎒 **INTEGRATION**: Generated water taxi dispatch order: {captain} on '{boat}' assigned.")
+            if bypass_transit:
+                add_execution_log(f"🏝️ **SPATIAL**: Bypassing water taxi assignment because both guest hotel and activity are on Isla Colon.")
+            else:
+                # Fetch wave height for the booking date
+                logistics_on_date = db["logistics"].find_one({"date": date})
+                wave_h = logistics_on_date.get("wave_height", 0.6) if logistics_on_date else 0.6
+                
+                # Fetch eligible captains based on vessel size & wave height
+                captains_in_db = list(db["captains"].find({}))
+                if not captains_in_db:
+                    from mock_data import CAPTAINS_CATALOG
+                    captains_in_db = CAPTAINS_CATALOG
+                
+                if wave_h > 1.0:
+                    eligible_captains = [c for c in captains_in_db if c.get("size") == "large"]
+                    vessel_msg = f"⚠️ Rough seas (wave height {wave_h}m). Filtered for LARGE vessels certified for rough weather."
+                else:
+                    eligible_captains = captains_in_db
+                    vessel_msg = f"Sea conditions are calm (wave height {wave_h}m). Both small and large vessels are eligible."
+                    
+                import random
+                chosen = random.choice(eligible_captains) if eligible_captains else captains_in_db[0]
+                captain = chosen["name"]
+                boat = chosen["vessel"]
+                
+                tour_name = target_tour["name"]
+                guest_name = guest["name"]
+                
+                sms_guest = f"Hi {guest_name}! Your water taxi transit for {tour_name} has been confirmed. Captain {captain} on {boat} will pick you up at {slot == 'morning' and '8:30 AM' or '1:30 PM'}."
+                sms_captain = f"Hola {captain}, traslado para el tour {tour_name} confirmado. Cliente: {guest_name}. Recogida en el hotel a las {slot == 'morning' and '8:30 AM' or '1:30 PM'}. Barco: {boat}."
+                
+                dispatch_doc = {
+                    "guest_id": guest_id,
+                    "booking_id": booking_id,
+                    "captain": captain,
+                    "boat": boat,
+                    "route": f"{guest_island} Resort ➔ {tour_island} ({target_tour['location']})",
+                    "status": "confirmed",
+                    "time": slot == 'morning' and '08:30' or '13:30',
+                    "sms_guest": sms_guest,
+                    "sms_captain": sms_captain,
+                    "date": date,
+                    "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
+                }
+                
+                db["dispatches"].insert_one(dispatch_doc)
+                add_execution_log(f"🎒 **INTEGRATION**: {vessel_msg}")
+                add_execution_log(f"🎒 **INTEGRATION**: Generated water taxi dispatch order: {captain} on '{boat}' assigned.")
         except Exception as ex_dispatch:
             logger.error(f"Failed to generate water taxi dispatch: {ex_dispatch}")
 
@@ -424,6 +453,32 @@ def reschedule_booking(booking_id: str, new_date: str, alternative_tour_id: str 
                     return res
             
         # Perform Rescheduling Transaction
+        # 0. Handle Captain Notification for swap/reschedule
+        try:
+            old_dispatch = db["dispatches"].find_one({"booking_id": booking_id, "status": "confirmed"})
+            if old_dispatch:
+                guest = db["guests"].find_one({"_id": guest_id})
+                guest_name = guest["name"] if guest else "Guest"
+                db["dispatches"].update_one(
+                    {"_id": old_dispatch["_id"]},
+                    {"$set": {
+                        "status": "rescheduled",
+                        "sms_captain": f"MODIFICADO: Traslado para booking {booking_id} cambiado.",
+                        "sms_guest": f"Your water taxi pickup for {target_tour['name']} has been rescheduled."
+                    }}
+                )
+                notification = {
+                    "captain": old_dispatch["captain"],
+                    "vessel": old_dispatch["boat"],
+                    "type": "swap",
+                    "message": f"🚨 NOTIFICACIÓN INMEDIATA: Capitán {old_dispatch['captain']}, su traslado de las {old_dispatch['time']} para el cliente {guest_name} ha sido MODIFICADO.",
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+                }
+                db["captain_notifications"].insert_one(notification)
+                add_execution_log(notification["message"])
+        except Exception as ex_notif:
+            logger.error(f"Failed to process reschedule captain notification: {ex_notif}")
+
         # 1. Update Booking
         db["bookings"].update_one(
             {"_id": booking_id},
@@ -453,35 +508,62 @@ def reschedule_booking(booking_id: str, new_date: str, alternative_tour_id: str 
         
         # 4. Generate dynamic Spanish/English captain dispatch orders
         try:
-            import random
-            captains = ["Capitán Jose", "Capitán Mateo", "Capitán Carlos", "Capitán Eduardo"]
-            boats = ["Panga Blanca", "Aqua Express", "Mar Azul", "Bocas Explorer"]
-            captain = random.choice(captains)
-            boat = random.choice(boats)
+            # Check spatial / geography rules
+            hotel_id = guest.get("hotel_id") if guest else None
+            hotel = db["tenants"].find_one({"_id": hotel_id}) if hotel_id else None
+            guest_island = hotel.get("location") if hotel else "Isla Colon"
+            tour_island = target_tour.get("island", "Isla Colon")
             
-            tour_name = target_tour["name"]
-            guest = db["guests"].find_one({"_id": guest_id})
-            guest_name = guest["name"] if guest else "Guest"
+            bypass_transit = (guest_island == "Isla Colon" and tour_island == "Isla Colon")
             
-            sms_guest = f"Hi {guest_name}! Your water taxi transit for {tour_name} has been confirmed. Captain {captain} on {boat} will pick you up at {target_slot == 'morning' and '8:30 AM' or '1:30 PM'}."
-            sms_captain = f"Hola {captain}, traslado para el tour {tour_name} confirmado. Cliente: {guest_name}. Recogida en el hotel a las {target_slot == 'morning' and '8:30 AM' or '1:30 PM'}. Barco: {boat}."
-            
-            dispatch_doc = {
-                "guest_id": guest_id,
-                "booking_id": booking_id,
-                "captain": captain,
-                "boat": boat,
-                "route": f"Hotel Resort ➔ {target_tour['location']}",
-                "status": "confirmed",
-                "time": target_slot == 'morning' and '08:30' or '13:30',
-                "sms_guest": sms_guest,
-                "sms_captain": sms_captain,
-                "date": new_date,
-                "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
-            }
-            
-            db["dispatches"].insert_one(dispatch_doc)
-            add_execution_log(f"🎒 **INTEGRATION**: Generated water taxi dispatch order: {captain} on '{boat}' assigned.")
+            if bypass_transit:
+                add_execution_log(f"🏝️ **SPATIAL**: Bypassing water taxi assignment because both guest hotel and activity are on Isla Colon.")
+            else:
+                # Fetch wave height for the rescheduled date
+                logistics_on_date = db["logistics"].find_one({"date": new_date})
+                wave_h = logistics_on_date.get("wave_height", 0.6) if logistics_on_date else 0.6
+                
+                # Fetch eligible captains based on vessel size & wave height
+                captains_in_db = list(db["captains"].find({}))
+                if not captains_in_db:
+                    from mock_data import CAPTAINS_CATALOG
+                    captains_in_db = CAPTAINS_CATALOG
+                
+                if wave_h > 1.0:
+                    eligible_captains = [c for c in captains_in_db if c.get("size") == "large"]
+                    vessel_msg = f"⚠️ Rough seas (wave height {wave_h}m). Filtered for LARGE vessels certified for rough weather."
+                else:
+                    eligible_captains = captains_in_db
+                    vessel_msg = f"Sea conditions are calm (wave height {wave_h}m). Both small and large vessels are eligible."
+                    
+                import random
+                chosen = random.choice(eligible_captains) if eligible_captains else captains_in_db[0]
+                captain = chosen["name"]
+                boat = chosen["vessel"]
+                
+                tour_name = target_tour["name"]
+                guest_name = guest["name"] if guest else "Guest"
+                
+                sms_guest = f"Hi {guest_name}! Your water taxi transit for {tour_name} has been confirmed. Captain {captain} on {boat} will pick you up at {target_slot == 'morning' and '8:30 AM' or '1:30 PM'}."
+                sms_captain = f"Hola {captain}, traslado para el tour {tour_name} confirmado. Cliente: {guest_name}. Recogida en el hotel a las {target_slot == 'morning' and '8:30 AM' or '1:30 PM'}. Barco: {boat}."
+                
+                dispatch_doc = {
+                    "guest_id": guest_id,
+                    "booking_id": booking_id,
+                    "captain": captain,
+                    "boat": boat,
+                    "route": f"{guest_island} Resort ➔ {tour_island} ({target_tour['location']})",
+                    "status": "confirmed",
+                    "time": target_slot == 'morning' and '08:30' or '13:30',
+                    "sms_guest": sms_guest,
+                    "sms_captain": sms_captain,
+                    "date": new_date,
+                    "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
+                }
+                
+                db["dispatches"].insert_one(dispatch_doc)
+                add_execution_log(f"🎒 **INTEGRATION**: {vessel_msg}")
+                add_execution_log(f"🎒 **INTEGRATION**: Generated water taxi dispatch order: {captain} on '{boat}' assigned.")
         except Exception as ex_dispatch:
             logger.error(f"Failed to generate water taxi dispatch: {ex_dispatch}")
             
@@ -595,15 +677,49 @@ def cancel_booking(booking_id: str) -> str:
         else:
             tour_name = "Unknown Activity"
             
-        # 3. Cancel or delete the associated captain's water taxi dispatch
-        db["dispatches"].update_one(
-            {"booking_id": booking_id},
-            {"$set": {
-                "status": "cancelled",
-                "sms_captain": f"CANCELADO: Traslado para booking {booking_id} cancelado.",
-                "sms_guest": f"Your water taxi pickup for {tour_name} on {date} has been cancelled."
-            }}
-        )
+        # 3. Cancel or delete the associated captain's water taxi dispatch and notify captain
+        try:
+            old_dispatch = db["dispatches"].find_one({"booking_id": booking_id, "status": "confirmed"})
+            if old_dispatch:
+                guest = db["guests"].find_one({"_id": guest_id})
+                guest_name = guest["name"] if guest else "Guest"
+                db["dispatches"].update_one(
+                    {"booking_id": booking_id},
+                    {"$set": {
+                        "status": "cancelled",
+                        "sms_captain": f"CANCELADO: Traslado para booking {booking_id} cancelado.",
+                        "sms_guest": f"Your water taxi pickup for {tour_name} on {date} has been cancelled."
+                    }}
+                )
+                # Create a notification record in captain_notifications
+                notification = {
+                    "captain": old_dispatch["captain"],
+                    "vessel": old_dispatch["boat"],
+                    "type": "cancellation",
+                    "message": f"🚨 NOTIFICACIÓN INMEDIATA: Capitán {old_dispatch['captain']}, su traslado de las {old_dispatch['time']} para el cliente {guest_name} ha sido CANCELADO.",
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+                }
+                db["captain_notifications"].insert_one(notification)
+                add_execution_log(notification["message"])
+            else:
+                db["dispatches"].update_one(
+                    {"booking_id": booking_id},
+                    {"$set": {
+                        "status": "cancelled",
+                        "sms_captain": f"CANCELADO: Traslado para booking {booking_id} cancelado.",
+                        "sms_guest": f"Your water taxi pickup for {tour_name} on {date} has been cancelled."
+                    }}
+                )
+        except Exception as ex_cancel_notif:
+            logger.error(f"Failed to process cancel captain notification: {ex_cancel_notif}")
+            db["dispatches"].update_one(
+                {"booking_id": booking_id},
+                {"$set": {
+                    "status": "cancelled",
+                    "sms_captain": f"CANCELADO: Traslado para booking {booking_id} cancelado.",
+                    "sms_guest": f"Your water taxi pickup for {tour_name} on {date} has been cancelled."
+                }}
+            )
         
         res_msg = f"Success: Booking '{booking_id}' for '{tour_name}' on {date} has been successfully cancelled. The reserved slot has been released back to inventory, and the associated water taxi dispatch order is cancelled."
         add_execution_log(f"📥 Tool **cancel_booking** returned: {res_msg}")
