@@ -61,8 +61,11 @@ class MockCollection:
                 results.append(item)
         return results
 
-    def find_one(self, query=None):
+    def find_one(self, query=None, *args, **kwargs):
         results = self.find(query)
+        if "sort" in kwargs and results:
+            sort_key, direction = kwargs["sort"][0]
+            results.sort(key=lambda x: x.get(sort_key, ""), reverse=(direction == -1))
         return results[0] if results else None
 
     def insert_one(self, document):
