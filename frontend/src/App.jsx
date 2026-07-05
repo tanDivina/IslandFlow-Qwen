@@ -2404,7 +2404,7 @@ function App() {
                     {/* The Printable Container */}
                     <div className="print-welcome-card-area glass-card" style={{
                       padding: '24px',
-                      background: 'linear-gradient(135deg, hsla(210, 32%, 11%, 0.4), hsla(210, 32%, 7%, 0.4))',
+                      background: 'var(--panel-bg)',
                       border: '1px dashed var(--primary)',
                       borderRadius: '12px',
                       textAlign: 'center',
@@ -2733,7 +2733,7 @@ function App() {
                     Manual Guest Check-In Form
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your MongoDB Atlas cluster.
+                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your active database.
                   </p>
                 </div>
 
