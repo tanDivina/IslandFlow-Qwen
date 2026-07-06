@@ -1281,10 +1281,8 @@ function App() {
                   .wave-slogan {
                     display: inline-block;
                     animation: waveMotion 2.5s ease-in-out infinite;
-                    color: #a8ff35 !important;
-                    text-shadow: 0 0 10px rgba(168,255,53,0.3);
-                    font-weight: 600;
-                    letter-spacing: 0.05em;
+                    color: var(--text-muted) !important;
+                    font-weight: 500;
                   }
                 `}} />
                 <p className="wave-slogan" style={{ fontSize: '0.85rem', margin: 0 }}>
