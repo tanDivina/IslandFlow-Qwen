@@ -582,10 +582,10 @@ function App() {
         
         if (activeBrand.primary_color && activeBrand.primary_color.includes('hsl')) {
           const colorValue = activeBrand.primary_color.replace('hsl(', '').replace(')', '');
-          target.style.setProperty('--border-color', `hsla(${colorValue}, 0.16)`);
-          target.style.setProperty('--border-glow', `hsla(${colorValue}, 0.35)`);
-          target.style.setProperty('--msg-user-bg', `hsla(${colorValue}, 0.1)`);
-          target.style.setProperty('--msg-agent-bg', `${activeBrand.primary_glow}`);
+          target.style.setProperty('--border-color', `hsla(${colorValue}, 0.24)`);
+          target.style.setProperty('--border-glow', `hsla(${colorValue}, 0.4)`);
+          target.style.setProperty('--msg-user-bg', `hsla(${colorValue}, 0.14)`);
+          target.style.setProperty('--msg-agent-bg', `${activeBrand.primary_glow || `hsla(${colorValue}, 0.08)`}`);
 
           // Dynamically compute complementary/split-complementary accent color and high-contrast button text color
           const hslParts = colorValue.split(',').map(p => p.trim());
