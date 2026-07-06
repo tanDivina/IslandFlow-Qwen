@@ -1272,9 +1272,25 @@ function App() {
                 )}
                 IslandFlow Experience
               </h1>
-              <p style={{ color: '#ffffff', opacity: 1, fontSize: '0.85rem' }}>
-                Rain or Shine, que siga la rumba
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <style dangerouslySetInnerHTML={{__html: `
+                  @keyframes waveMotion {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-4px); }
+                  }
+                  .wave-slogan {
+                    display: inline-block;
+                    animation: waveMotion 2.5s ease-in-out infinite;
+                    color: #a8ff35 !important;
+                    text-shadow: 0 0 10px rgba(168,255,53,0.3);
+                    font-weight: 600;
+                    letter-spacing: 0.05em;
+                  }
+                `}} />
+                <p className="wave-slogan" style={{ fontSize: '0.85rem', margin: 0 }}>
+                  🌊 Rain or Shine, que siga la rumba
+                </p>
+              </div>
             </div>
 
             {/* Navigation Tabs */}
