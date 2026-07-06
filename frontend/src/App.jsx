@@ -123,6 +123,7 @@ function App() {
   const lastGuestIdRef = React.useRef(null);
   const lastRequestRef = React.useRef(0);
 
+  const [lang, setLang] = useState('en');
   const [view, setView] = useState(initialParams.view);
   const [isItineraryOnly, setIsItineraryOnly] = useState(initialParams.itineraryOnly);
   const [archActiveLayer, setArchActiveLayer] = useState('all');
@@ -1294,20 +1295,92 @@ function App() {
             {/* Navigation Tabs */}
             <nav className="nav-links">
               <button className={`nav-link ${view === 'landing' ? 'active' : ''}`} onClick={() => navigateToView('landing')}>
-                Home / About
+                {lang === 'es' ? 'Inicio / Nosotros' : 'Home / About'}
               </button>
               <button className={`nav-link ${view === 'guest' ? 'active' : ''}`} onClick={() => navigateToView('guest')}>
-                Guest Portal
+                {lang === 'es' ? 'Portal del Huésped' : 'Guest Portal'}
               </button>
               <button className={`nav-link ${view === 'operator' ? 'active' : ''}`} onClick={() => navigateToView('operator')}>
-                Operator Console
+                {lang === 'es' ? 'Consola del Operador' : 'Operator Console'}
               </button>
               <button className={`nav-link ${view === 'integrations' ? 'active' : ''}`} onClick={() => navigateToView('integrations')}>
-                Business Integrations
+                {lang === 'es' ? 'Integraciones' : 'Business Integrations'}
               </button>
             </nav>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+              {/* Premium EN/ES Toggle Slider */}
+              <div 
+                onClick={() => setLang(lang === 'en' ? 'es' : 'en')}
+                style={{
+                  background: 'var(--bg-card-nested, rgba(15, 23, 42, 0.15))',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '24px',
+                  padding: '3px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  position: 'relative',
+                  width: '120px',
+                  height: '32px',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              >
+                {/* Sliding indicator */}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '3px',
+                    left: '3px',
+                    bottom: '3px',
+                    width: 'calc(50% - 3px)',
+                    background: 'var(--primary)',
+                    borderRadius: '20px',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: lang === 'en' ? 'translateX(0)' : 'translateX(100%)',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                    zIndex: 1
+                  }}
+                />
+                
+                {/* English label */}
+                <span style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  color: lang === 'en' ? 'var(--primary-btn-text, #ffffff)' : 'var(--text-muted)',
+                  zIndex: 2,
+                  transition: 'color 0.25s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px'
+                }}>
+                  🇬🇧 EN
+                </span>
+
+                {/* Spanish label */}
+                <span style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  color: lang === 'es' ? 'var(--primary-btn-text, #ffffff)' : 'var(--text-muted)',
+                  zIndex: 2,
+                  transition: 'color 0.25s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px'
+                }}>
+                  🇪🇸 ES
+                </span>
+              </div>
+
               <span style={{ 
                 background: isRealMongo ? 'rgba(16, 185, 129, 0.08)' : 'var(--primary-glow)', 
                 color: isRealMongo ? '#10b981' : 'var(--primary)', 
