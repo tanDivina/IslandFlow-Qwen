@@ -1273,7 +1273,7 @@ function App() {
                 IslandFlow Experience
               </h1>
               <p style={{ color: '#ffffff', opacity: 1, fontSize: '0.85rem' }}>
-                Eco-Tourism Coordinator for Bocas del Toro
+                Rain or Shine, que siga la rumba
               </p>
             </div>
 
