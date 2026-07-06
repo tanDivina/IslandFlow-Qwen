@@ -94,7 +94,7 @@ async def periodic_weather_sync():
             logger.info("Automated Background Weather Sync: Completed.")
         except Exception as e:
             logger.error(f"Automated Background Weather Sync: Error during sync: {e}")
-        await asyncio.sleep(600)  # Sleep for 10 minutes
+        await asyncio.sleep(86400)  # Sleep for 24 hours
 
 # Seed database on startup
 @app.on_event("startup")
