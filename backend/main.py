@@ -90,7 +90,7 @@ async def periodic_weather_sync():
     while True:
         try:
             logger.info("Automated Background Weather Sync: Starting sync...")
-            sync_live_weather()
+            await sync_live_weather()
             logger.info("Automated Background Weather Sync: Completed.")
         except Exception as e:
             logger.error(f"Automated Background Weather Sync: Error during sync: {e}")
@@ -148,8 +148,7 @@ class PMSSyncPayload(BaseModel):
     hotel_id: Optional[str] = None
     hotel_name: Optional[str] = None
 
-# --- Automated Weather Rescheduling ---
-def trigger_automated_weather_reschedules(date: str, weather: str, alert: str):
+async def trigger_automated_weather_reschedules(date: str, weather: str, alert: str):
     """
     Automated background rescheduling workflow.
     When a date's weather changes to rainy/heavy rain, this function finds all active outdoor bookings on that date,
@@ -183,6 +182,9 @@ def trigger_automated_weather_reschedules(date: str, weather: str, alert: str):
                 continue
                 
             processed_guests_in_run.add(guest_id)
+            
+            # Stagger Qwen API requests to prevent 401 concurrent limit throttling on Standard Seats
+            await asyncio.sleep(2.5)
             
             alert_prompt = (
                 f"[SYSTEM EVENT: Weather alert updated for {date} to {weather}. "
@@ -228,7 +230,7 @@ def trigger_automated_weather_reschedules(date: str, weather: str, alert: str):
                 logger.error(f"Failed to run automated rescheduling for guest {guest_id}: {e}")
 
 # --- Weather Sync Helper ---
-def sync_live_weather():
+async def sync_live_weather():
     owm_key = os.getenv("OPENWEATHER_API_KEY")
     
     # 1. Fetch Marine wave heights from Open-Meteo
@@ -391,7 +393,7 @@ def sync_live_weather():
             )
             
             # Automatically trigger reschedule proposal loop for affected guests
-            trigger_automated_weather_reschedules(date, weather_status, alert_status)
+            await trigger_automated_weather_reschedules(date, weather_status, alert_status)
         logger.info("Successfully synced real-world weather and wave heights with MongoDB logistics.")
     except Exception as e:
         logger.error(f"Failed to synchronize live weather/marine data with database: {e}")
@@ -436,7 +438,7 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
                 clear_adk_session(f"g{i}")
 
         # Sync actual real-world weather before reading from DB
-        sync_live_weather()
+        await sync_live_weather()
 
         tours = list(db["tours"].find({}))
         bookings = list(db["bookings"].find({}))
@@ -576,7 +578,7 @@ async def simulate_weather(payload: WeatherSimulationPayload):
             )
 
         # 2. Automatically trigger reschedule proposals for ALL affected guests
-        trigger_automated_weather_reschedules(payload.date, payload.weather, payload.alert)
+        await trigger_automated_weather_reschedules(payload.date, payload.weather, payload.alert)
 
         # Fetch the active guest's updated chat history to return the latest response
         active_guest = db["guests"].find_one({"_id": guest_id})
@@ -636,7 +638,7 @@ async def update_weather_api(payload: WeatherUpdatePayload):
             )
 
         # Automatically trigger reschedule proposals for ALL affected guests in the background
-        trigger_automated_weather_reschedules(payload.date, payload.weather, payload.alert)
+        await trigger_automated_weather_reschedules(payload.date, payload.weather, payload.alert)
 
         return {
             "status": "success",
