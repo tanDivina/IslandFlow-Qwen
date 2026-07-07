@@ -89,7 +89,7 @@ export default function ChatWidget({
   };
 
   return (
-    <div className="glass-card" style={{ height: '550px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div className="glass-card chat-widget-card" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '14px', background: 'hsla(210, 32%, 7%, 0.4)' }}>
         <div style={{ position: 'relative' }}>
@@ -158,6 +158,46 @@ export default function ChatWidget({
           </svg>
           🚨 Front Desk
         </a>
+
+        {/* Product Feedback Button */}
+        <button 
+          onClick={() => {
+            const feedback = prompt("Please share your feedback on this AI experience:");
+            if (feedback) {
+              alert("Thank you for your feedback! It has been logged.");
+              console.log("Feedback received:", feedback);
+            }
+          }}
+          title="Share Feedback on this AI Experience"
+          style={{
+            background: 'var(--primary-glow)',
+            border: '1px solid var(--primary)',
+            color: 'var(--primary)',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--primary)';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--primary-glow)';
+            e.currentTarget.style.color = 'var(--primary)';
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Feedback
+        </button>
       </div>
 
       {/* Messages area with scroll isolation & anchoring */}
@@ -376,7 +416,9 @@ export default function ChatWidget({
                       <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
                         <button 
                           className="btn-primary" 
-                          onClick={() => onRespondProposal(targetBooking._id, targetBooking.date, selectedAlternativeId || (indoorTours[0]?._id || 't4'), true)}
+                          onClick={() => {
+                            onRespondProposal(targetBooking._id, targetBooking.date, selectedAlternativeId || (indoorTours[0]?._id || 't4'), true);
+                          }}
                           style={{ 
                             flex: 1, 
                             padding: '12px 16px', 

@@ -1,40 +1,6 @@
-import React, { useState } from 'react';
-
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : window.location.origin;
+import React from 'react';
 
 export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
-  const [isExporting, setIsExporting] = useState(false);
-  const [ossUrl, setOssUrl] = useState('');
-  const [exportError, setExportError] = useState('');
-
-  const handleExportToOSS = async () => {
-    setIsExporting(true);
-    setExportError('');
-    setOssUrl('');
-    try {
-      const res = await fetch(`${API_BASE}/api/export-itinerary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ guest_id: guestId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.oss_url) {
-        setOssUrl(data.oss_url);
-      } else {
-        setExportError(data.detail || 'Failed to export itinerary to Alibaba Cloud OSS.');
-      }
-    } catch (err) {
-      console.error('Error exporting itinerary:', err);
-      setExportError('Network error exporting itinerary.');
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   const renderMarkdown = (md) => {
     if (!md) {
       return (
@@ -99,7 +65,7 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '400px' }}>
+    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'hsl(222, 47%, 9%)', minHeight: '400px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', flexShrink: 0 }}>
@@ -116,44 +82,6 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
         {itineraryMarkdown && (
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button 
-              className="btn-primary" 
-              onClick={handleExportToOSS}
-              disabled={isExporting}
-              style={{ 
-                padding: '8px 12px', 
-                fontSize: '0.8rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--primary)',
-                color: '#050507',
-                boxShadow: '0 0 10px rgba(168, 255, 53, 0.2)'
-              }}
-            >
-              {isExporting ? (
-                <>
-                  <div style={{ 
-                    width: '12px', 
-                    height: '12px', 
-                    border: '2px solid rgba(0,0,0,0.2)', 
-                    borderTopColor: '#050507', 
-                    borderRadius: '50%', 
-                    animation: 'spin 1s linear infinite' 
-                  }} />
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  Export to Alibaba Cloud OSS
-                </>
-              )}
-            </button>
-            <button 
               className="btn-secondary" 
               onClick={() => window.print()} 
               style={{ 
@@ -164,79 +92,18 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
                 gap: '8px'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
               </div>
-              Print
+              Print Itinerary
             </button>
           </div>
         )}
       </div>
-
-      {ossUrl && (
-        <div style={{
-          background: 'rgba(168, 255, 53, 0.08)',
-          border: '1px solid var(--primary)',
-          borderRadius: '8px',
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          boxShadow: '0 0 15px rgba(168, 255, 53, 0.1)',
-          animation: 'fadeIn 0.3s ease-in-out'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--text-primary)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-              <circle cx="6" cy="18" r="3" />
-              <circle cx="18" cy="6" r="3" />
-              <path d="M18 9v6a3 3 0 0 1-3 3H9" />
-              <polyline points="12 15 9 18 12 21" />
-              <path d="M6 15V9a3 3 0 0 1 3-3h6" />
-              <polyline points="12 3 15 6 12 9" />
-            </svg>
-            <div>
-              <strong style={{ color: 'var(--primary)' }}>Exported to Alibaba Cloud OSS!</strong>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '2px' }}>Your travel itinerary receipt is securely archived and accessible.</div>
-            </div>
-          </div>
-          <a 
-            href={ossUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="btn-primary"
-            style={{ 
-              padding: '6px 12px', 
-              fontSize: '0.75rem', 
-              textDecoration: 'none',
-              background: 'var(--primary)',
-              color: '#050507',
-              boxShadow: '0 0 10px rgba(168, 255, 53, 0.3)',
-              fontWeight: 600
-            }}
-          >
-            Open Receipt Link
-          </a>
-        </div>
-      )}
-
-      {exportError && (
-        <div style={{
-          background: 'rgba(239, 68, 68, 0.08)',
-          border: '1px solid var(--error)',
-          borderRadius: '8px',
-          padding: '12px 16px',
-          fontSize: '0.8rem',
-          color: 'var(--text-primary)',
-          boxShadow: '0 0 15px rgba(239, 68, 68, 0.1)'
-        }}>
-          <strong style={{ color: 'var(--error)' }}>Export Error:</strong> {exportError}
-        </div>
-      )}
 
       <div style={{ 
         background: 'white', 

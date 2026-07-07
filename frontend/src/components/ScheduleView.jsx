@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ScheduleView({ bookings, tours, logistics, guestId }) {
+export default function ScheduleView({ bookings, tours, logistics, guestId, lang = 'en' }) {
   const dates = logistics && logistics.length > 0
     ? [...logistics].sort((a, b) => a.date.localeCompare(b.date)).map(l => l.date)
     : ["2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02"];
@@ -66,6 +66,33 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
     return log ? { weather: log.weather, alert: log.alert } : { weather: 'Sunny', alert: 'none' };
   };
 
+  const labels = {
+    en: {
+      title: "Stay Activity Timeline",
+      subtitle: "Your verified stay timeline is fully prepared and up to date.",
+      day: "Day",
+      stormWarning: "Storm Warning!",
+      rainForecasted: "Rain Forecasted",
+      morning: "Morning",
+      afternoon: "Afternoon",
+      unscheduled: "Unscheduled Slot",
+      loadingTour: "Loading tour..."
+    },
+    es: {
+      title: "Línea de Actividades",
+      subtitle: "Su itinerario verificado de estadía está preparado y al día.",
+      day: "Día",
+      stormWarning: "¡Alerta de Tormenta!",
+      rainForecasted: "Lluvia Pronosticada",
+      morning: "Mañana",
+      afternoon: "Tarde",
+      unscheduled: "Espacio Libre",
+      loadingTour: "Cargando tour..."
+    }
+  };
+
+  const currentL = labels[lang] || labels.en;
+
   return (
     <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
@@ -83,10 +110,10 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
               <path d="M12 10c1.5-4 5-6 8-6" />
             </svg>
           </div>
-          Stay Activity Timeline
+          {currentL.title}
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 300 }}>
-          Your verified stay timeline is fully prepared and up to date.
+          {currentL.subtitle}
         </p>
       </div>
 
@@ -115,7 +142,7 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
                 <div>
                   <div style={{ fontSize: '0.92rem', fontWeight: 600, letterSpacing: '0.01em' }}>{date}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: 300 }}>
-                    Day {dates.indexOf(date) + 1}
+                    {currentL.day} {dates.indexOf(date) + 1}
                   </div>
                 </div>
                 <div 
@@ -181,18 +208,19 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                   </div>
-                  {isHeavyRain ? 'Storm Warning!' : 'Rain Forecasted'}
+                  {isHeavyRain ? currentL.stormWarning : currentL.rainForecasted}
                 </div>
               )}
 
               {/* Slots */}
-              {["morning", "afternoon"].map((slot) => {
-                const slotData = getBookingForSlot(date, slot);
+              {[currentL.morning, currentL.afternoon].map((slotName, sIdx) => {
+                const slotKey = sIdx === 0 ? "morning" : "afternoon";
+                const slotData = getBookingForSlot(date, slotKey);
                 
                 return (
-                  <div key={slot} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div key={slotKey} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.05em' }}>
-                      {slot}
+                      {slotName}
                     </div>
                     {slotData ? (
                       <div 
@@ -208,7 +236,7 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: '1.25' }}>
-                            {slotData.tour?.name || 'Loading tour...'}
+                            {slotData.tour?.name || currentL.loadingTour}
                           </span>
                         </div>
                         
@@ -257,7 +285,7 @@ export default function ScheduleView({ bookings, tours, logistics, guestId }) {
                           fontWeight: 300
                         }}
                       >
-                        Unscheduled Slot
+                        {currentL.unscheduled}
                       </div>
                     )}
                   </div>

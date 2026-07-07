@@ -6,35 +6,44 @@ import ControlPanel from './components/ControlPanel';
 import ItineraryDoc from './components/ItineraryDoc';
 import ErrorBoundary from './components/ErrorBoundary';
 import WeatherHorizon from './components/WeatherHorizon';
+import CaptainPortal from './components/CaptainPortal';
+import OperatorLoginForm from './components/OperatorLoginForm';
 import Magnet from './components/Magnet';
 
 
 
-
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : window.location.origin;
+const API_BASE = import.meta.env.VITE_API_BASE || 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : window.location.origin);
 
 // Synchronously parse query parameters to prevent mount-time state transitions and race conditions
 const getInitialParams = () => {
   if (typeof window === 'undefined') {
-    return { view: 'landing', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: false };
+    return { view: 'landing', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: false, captainId: 'cap1' };
   }
   const params = new URLSearchParams(window.location.search);
   const urlToken = params.get('token');
   const urlGuestId = params.get('guest_id');
   const urlView = params.get('view');
+  const urlCaptainId = params.get('captain_id');
   const urlItineraryOnly = params.get('itinerary_only') === 'true';
   
-  if (urlToken) {
-    return { view: 'guest', guestId: 'g1', token: urlToken, secureActive: true, guestViewOnly: true, itineraryOnly: urlItineraryOnly };
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  
+  if (urlCaptainId) {
+    return { view: 'captain', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly, captainId: urlCaptainId };
+  } else if (urlToken) {
+    return { view: 'guest', guestId: 'g1', token: urlToken, secureActive: true, guestViewOnly: true, itineraryOnly: urlItineraryOnly, captainId: 'cap1' };
   } else if (urlGuestId) {
     const isSecureParam = params.get('secure') === 'true';
-    return { view: 'guest', guestId: urlGuestId, token: null, secureActive: isSecureParam, guestViewOnly: true, itineraryOnly: urlItineraryOnly };
-  } else if (urlView && ['landing', 'guest', 'operator', 'integrations'].includes(urlView)) {
-    return { view: urlView, guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly };
+    return { view: 'guest', guestId: urlGuestId, token: null, secureActive: isSecureParam, guestViewOnly: true, itineraryOnly: urlItineraryOnly, captainId: 'cap1' };
+  } else if (urlView && ['landing', 'guest', 'operator', 'integrations', 'captain'].includes(urlView)) {
+    return { view: urlView, guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly, captainId: 'cap1' };
+  } else if (isStandalone) {
+    return { view: 'captain', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly, captainId: 'cap1' };
   }
-  return { view: 'landing', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly };
+  return { view: 'landing', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly, captainId: 'cap1' };
 };
 
 const initialParams = getInitialParams();
@@ -96,13 +105,37 @@ const DEFAULT_GUEST_BRANDS = {
   g10: 'hotel_redfrog'
 };
 
+// Safe localStorage wrapper functions to prevent crash in restricted environments (incognito, sandboxed iframes, etc.)
+const safeLocalStorageGet = (key, fallback) => {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch (e) {
+    console.warn(`localStorage read failed for key "${key}":`, e);
+    return fallback;
+  }
+};
+
+const safeLocalStorageSet = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`localStorage write failed for key "${key}":`, e);
+  }
+};
+
+const safeLocalStorageRemove = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.warn(`localStorage remove failed for key "${key}":`, e);
+  }
+};
+
 function App() {
   const [bookings, setBookings] = useState([]);
   const [tours, setTours] = useState([]);
   const [logistics, setLogistics] = useState([]);
   const [guests, setGuests] = useState([]);
-  const [captainNotifications, setCaptainNotifications] = useState([]);
-  const [guestMemories, setGuestMemories] = useState([]);
   const [itineraryMarkdown, setItineraryMarkdown] = useState('');
   const [messages, setMessages] = useState([]);
   const [agentLogs, setAgentLogs] = useState(['🤖 Simulation environment initialized. Ready for weather events.']);
@@ -120,16 +153,46 @@ function App() {
   const [isSecureModeActive, setIsSecureModeActive] = useState(initialParams.secureActive);
   const [isSecureMode, setIsSecureMode] = useState(false);
   const [operatorFlyerToken, setOperatorFlyerToken] = useState('');
+  const [operatorHotelId, setOperatorHotelId] = useState(() => safeLocalStorageGet('operatorHotelId', null));
+  const [operatorHotelName, setOperatorHotelName] = useState(() => safeLocalStorageGet('operatorHotelName', null));
   const lastGuestIdRef = React.useRef(null);
   const lastRequestRef = React.useRef(0);
 
-  const [lang, setLang] = useState('en');
   const [view, setView] = useState(initialParams.view);
+  const [mobileTab, setMobileTab] = useState('chat'); // 'chat' or 'itinerary'
+  const [lang, setLang] = useState(() => safeLocalStorageGet('islandflow_lang_v2', 'es'));
+
+  useEffect(() => {
+    safeLocalStorageSet('islandflow_lang_v2', lang);
+  }, [lang]);
+  const [captainId, setCaptainId] = useState(initialParams.captainId || 'cap1');
+  const [onboardingCaptainId, setOnboardingCaptainId] = useState('cap1');
+  const [captains, setCaptains] = useState([]);
   const [isItineraryOnly, setIsItineraryOnly] = useState(initialParams.itineraryOnly);
   const [archActiveLayer, setArchActiveLayer] = useState('all');
   const [selectedToolId, setSelectedToolId] = useState('get_tours');
-  const [mobileTab, setMobileTab] = useState('chat'); // 'chat' or 'itinerary'
 
+
+  // Synchronize view state with browser URL search parameters for Pendo pageview tracking and bookmarkability
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const currentView = url.searchParams.get('view');
+    
+    // Only push state if the URL doesn't already match the current view state
+    if (currentView !== view) {
+      if (view === 'landing') {
+        url.searchParams.delete('view');
+      } else {
+        url.searchParams.set('view', view);
+      }
+      
+      // Preserve other parameters like guest_id and token
+      window.history.pushState(null, '', url.pathname + url.search);
+      
+
+    }
+  }, [view]);
 
   // States & Refs for resilient custom dropdown menus
   const [guestDropdownOpen, setGuestDropdownOpen] = useState(false);
@@ -339,6 +402,64 @@ function App() {
     }
   };
 
+  const handleDeleteGuest = async (targetGuestId, e) => {
+    if (e) e.stopPropagation();
+    
+    // Prevent deleting default guests
+    if (['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'].includes(targetGuestId)) {
+      alert("Cannot delete default system mock guests.");
+      return;
+    }
+    
+    const targetGuest = (guests || []).find(g => g && g._id === targetGuestId);
+    const guestName = targetGuest ? targetGuest.name : targetGuestId;
+    
+    if (!window.confirm(`Are you sure you want to delete guest "${guestName}"? This will remove their itinerary and all bookings.`)) {
+      return;
+    }
+    
+    addLog(`✨ Deleting manual guest: ${targetGuestId}`);
+    try {
+      const res = await fetch(`${API_BASE}/api/guest/${targetGuestId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        setGuests(prev => prev.filter(g => g && g._id !== targetGuestId));
+        addLog(`🟢 Guest '${guestName}' removed successfully from DB.`);
+        
+        // If we deleted the currently active guest, reset back to g1
+        if (guestId === targetGuestId) {
+          setToken(null);
+          setIsSecureModeActive(false);
+          setIsGuestViewOnly(false);
+          setTenantBrand(null);
+          setGuestId("g1");
+          setWelcomeCardGuestId("g1");
+          setMessages([]);
+          setBookings([]);
+          setItineraryMarkdown('');
+          await fetchStatus("g1");
+        } else {
+          // Just refresh state
+          await fetchStatus(guestId);
+        }
+        
+        // If we deleted the messaging selected guest, reset that state too
+        if (messagingGuestId === targetGuestId) {
+          setMessagingGuestId('g1');
+        }
+      } else {
+        throw new Error(data.detail || "Failed to delete guest.");
+      }
+    } catch (err) {
+      console.error("Error in guest deletion:", err);
+      addLog(`❌ Guest Deletion Failed: ${err.message}`);
+      alert(`Guest deletion failed: ${err.message}`);
+    }
+  };
+
   // Custom Tour Register Form States
   const [customTourName, setCustomTourName] = useState('');
   const [customTourType, setCustomTourType] = useState('outdoor');
@@ -373,7 +494,7 @@ function App() {
       
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(data.message || "Custom excursion successfully added to MongoDB!");
+        alert(data.message || "Custom excursion successfully added to DynamoDB!");
         setCustomTourName('');
         setCustomTourDesc('');
         setCustomTourPrice('50.0');
@@ -407,6 +528,13 @@ function App() {
       fetchStatus(guestId);
     }
   }, [guestId, token]);
+
+  // Refetch status when view becomes 'operator' or operatorHotelId changes (securing multi-tenant separation)
+  useEffect(() => {
+    if (view === 'operator') {
+      fetchStatus(guestId);
+    }
+  }, [view, operatorHotelId]);
 
   // Handle automatic theme adjustment depending on forecast alerts
   useEffect(() => {
@@ -455,24 +583,13 @@ function App() {
         }
       }
       
+      if (view === 'operator' && operatorHotelId) {
+        url += url.includes('?') ? `&hotel_id=${operatorHotelId}` : `?hotel_id=${operatorHotelId}`;
+      }
+      
       const res = await fetch(url);
       if (!res.ok) throw new Error("Could not connect to FastAPI backend server.");
       const data = await res.json();
-
-      let fetchedMemories = [];
-      if (data.guest_id) {
-        try {
-          const memRes = await fetch(`${API_BASE}/api/guests/${data.guest_id}/memories`);
-          if (memRes.ok) {
-            const memData = await memRes.json();
-            if (memData.success && memData.memories) {
-              fetchedMemories = memData.memories;
-            }
-          }
-        } catch (memErr) {
-          console.error("Error fetching guest memories:", memErr);
-        }
-      }
       
       // Ignore stale responses to eliminate network race conditions and infinite loops
       if (requestId !== lastRequestRef.current) {
@@ -484,8 +601,7 @@ function App() {
         setTours(data.tours || []);
         setLogistics(data.logistics || []);
         setGuests(data.guests || []);
-        setCaptainNotifications(data.captain_notifications || []);
-        setGuestMemories(fetchedMemories);
+        setCaptains(data.captains || []);
         const brand = data.tenant_brand || null;
         setTenantBrand(brand);
         setTenantsList(data.tenants || []);
@@ -785,7 +901,7 @@ function App() {
         addLog(`✅ Booking updated and slots shifted successfully!`);
         setMessages((prev) => [...prev, { 
           role: 'model', 
-          text: "Respect, my friend! I have processed the change in MongoDB, updated your booking slots, and generated your new official travel receipt below. Pura vida! 🌴" 
+          text: "Respect, my friend! I have processed the change in DynamoDB, updated your booking slots, and generated your new official travel receipt below. Pura vida! 🌴" 
         }]);
         setShowItineraryModal(true);
       } else {
@@ -1099,6 +1215,38 @@ function App() {
     }, 4500);
   };
 
+  const handleAssignCaptain = async (bookingId, captainId) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/api/operator/assign-captain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_id: bookingId,
+          captain_id: captainId || null
+        })
+      });
+      if (!res.ok) throw new Error('Failed to assign captain');
+      const data = await res.json();
+      
+      const dateStr = new Date().toLocaleTimeString();
+      const capName = captains.find(c => c._id === captainId)?.name || 'None (Unassigned)';
+      addLog(`[Assign] [${dateStr}] Assigned Captain ${capName} to Booking ${bookingId}`);
+      
+      setPushToastText(`Captain successfully updated to: ${capName}`);
+      setShowPushToast(true);
+      setTimeout(() => setShowPushToast(false), 4500);
+
+      // Refresh data
+      await fetchStatus(guestId);
+    } catch (err) {
+      console.error(err);
+      alert('Error updating captain assignment.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const currentActiveBrand = tenantBrand;
 
   return (
@@ -1145,41 +1293,6 @@ function App() {
           <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <h1 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', fontFamily: 'var(--font-serif)', letterSpacing: '0.08em', color: 'var(--primary)' }}>
-                {currentActiveBrand?.logo_url && !logoErrors[currentActiveBrand._id || 'active'] ? (
-                  <div style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '1.5px solid var(--primary)',
-                    boxShadow: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.3)',
-                    flexShrink: 0
-                  }}>
-                    <img 
-                      src={currentActiveBrand.logo_url} 
-                      alt={currentActiveBrand.name || 'Brand Logo'} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={() => {
-                        setLogoErrors(prev => ({ ...prev, [currentActiveBrand._id || 'active']: true }));
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', flexShrink: 0 }}>
-                    <path d="M12 22c1-4 1-8 0-12" />
-                    <path d="M5 22c2-.5 12-.5 14 0" />
-                    <path d="M12 10c-3-2-7-1-9 2" />
-                    <path d="M12 10c3-2 7-1 9 2" />
-                    <path d="M12 10c-4 .5-8 3-9 7" />
-                    <path d="M12 10c4 .5 8 3 9 7" />
-                    <path d="M12 10c-1.5-4-5-6-8-6" />
-                    <path d="M12 10c1.5-4 5-6 8-6" />
-                  </svg>
-                )}
                 {tenantBrand?.name || (guests || []).find(g => g && g._id === guestId)?.hotel_name || 'La Coralina Island House'}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
@@ -1236,58 +1349,32 @@ function App() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <h1 className="app-title" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => navigateToView('landing')}>
-                {currentActiveBrand?.logo_url && !logoErrors[currentActiveBrand._id || 'active'] ? (
-                  <div style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    border: '1.5px solid var(--primary)',
-                    boxShadow: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(0,0,0,0.3)',
-                    flexShrink: 0
-                  }}>
-                    <img 
-                      src={currentActiveBrand.logo_url} 
-                      alt={currentActiveBrand.name || 'Brand Logo'} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={() => {
-                        setLogoErrors(prev => ({ ...prev, [currentActiveBrand._id || 'active']: true }));
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', flexShrink: 0 }}>
-                    <path d="M12 22c1-4 1-8 0-12" />
-                    <path d="M5 22c2-.5 12-.5 14 0" />
-                    <path d="M12 10c-3-2-7-1-9 2" />
-                    <path d="M12 10c3-2 7-1 9 2" />
-                    <path d="M12 10c-4 .5-8 3-9 7" />
-                    <path d="M12 10c4 .5 8 3 9 7" />
-                    <path d="M12 10c-1.5-4-5-6-8-6" />
-                    <path d="M12 10c1.5-4 5-6 8-6" />
-                  </svg>
-                )}
-                IslandFlow Experience
+                IslandFlow
               </h1>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <style dangerouslySetInnerHTML={{__html: `
-                  @keyframes waveMotion {
+                  @keyframes sineWave {
                     0%, 100% { transform: translateY(0); }
                     50% { transform: translateY(-4px); }
                   }
-                  .wave-slogan {
+                  .wave-letter {
                     display: inline-block;
-                    animation: waveMotion 2.5s ease-in-out infinite;
-                    color: var(--text-muted) !important;
-                    font-weight: 500;
+                    animation: sineWave 1.6s ease-in-out infinite;
                   }
                 `}} />
-                <p className="wave-slogan" style={{ fontSize: '0.85rem', margin: 0 }}>
-                  🌊 Rain or Shine, que siga la rumba
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                  {"Rain or Shine, que siga la rumba".split("").map((char, index) => (
+                    <span 
+                      key={index} 
+                      className="wave-letter" 
+                      style={{ 
+                        animationDelay: `${index * 0.04}s`,
+                        whiteSpace: char === " " ? "pre" : "normal"
+                      }}
+                    >
+                      {char}
+                    </span>
+                  ))}
                 </p>
               </div>
             </div>
@@ -1295,13 +1382,16 @@ function App() {
             {/* Navigation Tabs */}
             <nav className="nav-links">
               <button className={`nav-link ${view === 'landing' ? 'active' : ''}`} onClick={() => navigateToView('landing')}>
-                {lang === 'es' ? 'Inicio / Nosotros' : 'Home / About'}
+                {lang === 'es' ? 'Inicio' : 'Home'}
               </button>
               <button className={`nav-link ${view === 'guest' ? 'active' : ''}`} onClick={() => navigateToView('guest')}>
                 {lang === 'es' ? 'Portal del Huésped' : 'Guest Portal'}
               </button>
               <button className={`nav-link ${view === 'operator' ? 'active' : ''}`} onClick={() => navigateToView('operator')}>
                 {lang === 'es' ? 'Consola del Operador' : 'Operator Console'}
+              </button>
+              <button className={`nav-link ${view === 'captain' ? 'active' : ''}`} onClick={() => navigateToView('captain')}>
+                {lang === 'es' ? 'Portal del Capitán' : 'Captain Portal'}
               </button>
               <button className={`nav-link ${view === 'integrations' ? 'active' : ''}`} onClick={() => navigateToView('integrations')}>
                 {lang === 'es' ? 'Integraciones' : 'Business Integrations'}
@@ -1380,7 +1470,65 @@ function App() {
                   🇪🇸 ES
                 </span>
               </div>
-
+              {view === 'operator' && operatorHotelId && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: '#ffffff',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3ecdc6', boxShadow: '0 0 8px #3ecdc6' }}></span>
+                    Resort: {operatorHotelName}
+                  </span>
+                  <button
+                    onClick={() => {
+                      transitionState(() => {
+                        safeLocalStorageRemove('operatorHotelId');
+                        safeLocalStorageRemove('operatorHotelName');
+                        setOperatorHotelId(null);
+                        setOperatorHotelName(null);
+                      });
+                    }}
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.08)',
+                      border: '1px solid rgba(239, 68, 68, 0.18)',
+                      color: '#f87171',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.15s ease',
+                      boxShadow: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.18)';
+                    }}
+                  >
+                    <span>Log Out</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
               <span style={{ 
                 background: isRealMongo ? 'rgba(16, 185, 129, 0.08)' : 'var(--primary-glow)', 
                 color: isRealMongo ? '#10b981' : 'var(--primary)', 
@@ -1400,8 +1548,48 @@ function App() {
                   borderRadius: '50%',
                   background: isRealMongo ? '#10b981' : 'var(--primary)'
                 }}></span>
-                {isRealMongo ? 'MONGO ATLAS LIVE' : 'LOCAL SANDBOX DB'}
+                {isRealMongo ? 'AWS DYNAMODB LIVE' : 'LOCAL SANDBOX DB'}
               </span>
+              <button 
+                onClick={() => {
+                  const feedback = prompt("Please share your feedback on this AI experience:");
+                  if (feedback) {
+                    alert("Thank you for your feedback! It has been logged.");
+                    console.log("Feedback received:", feedback);
+                  }
+                }}
+                title="Share Feedback on this AI Experience"
+                style={{
+                  background: 'var(--primary-glow)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--primary)',
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  letterSpacing: '0.04em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--primary)';
+                  e.currentTarget.style.background = 'var(--primary)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.background = 'var(--primary-glow)';
+                  e.currentTarget.style.color = 'var(--primary)';
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                FEEDBACK
+              </button>
             </div>
           </>
         )}
@@ -1411,46 +1599,116 @@ function App() {
       {((view === 'guest' && !isGuestViewOnly) || view === 'operator') && (
         <div style={{ 
           display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          padding: '16px 20px', 
-          marginBottom: '20px', 
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          padding: '8px 16px', 
+          marginBottom: '12px', 
           background: 'var(--panel-bg)', 
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid var(--border-color)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           boxShadow: 'var(--shadow-sm)'
         }}>
-          {/* Demo Sandbox Alert Header */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
-            paddingBottom: '10px',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ 
-                background: 'var(--primary-glow)', 
-                color: 'var(--primary)', 
-                border: '1px solid var(--border-color)',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                fontSize: '0.65rem',
-                fontWeight: 700,
-                letterSpacing: '0.04em'
-              }}>
-                DEMO SANDBOX SIMULATOR
-              </span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Playing both Hotel Operator & Guest. In production, guest portals are 100% isolated.
-              </span>
+          {/* Left: Badge and text/Active status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ 
+              background: 'var(--primary-glow)', 
+              color: 'var(--primary)', 
+              border: '1px solid var(--border-color)',
+              padding: '2px 6px',
+              borderRadius: '8px',
+              fontSize: '0.62rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              whiteSpace: 'nowrap'
+            }}>
+              DEMO SANDBOX
+            </span>
+            <div style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Active Reservation:</span>
+              <strong style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                {(guests || []).find(g => g && g._id === guestId)?.name || 'Alex Mercer'} ({guestId})
+              </strong>
             </div>
-            
-            {/* Quick Link to launch an isolated view for the currently selected guest */}
+          </div>
+
+          {/* Right: Dropdown switcher & Launch button */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Switch Guest:</span>
+              <select
+                value={guestId}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const g = (guests || []).find(x => x && x._id === selectedId);
+                  if (!g) return;
+                  setToken(null);
+                  setIsSecureModeActive(false);
+                  setIsGuestViewOnly(false);
+                  setTenantBrand(null);
+                  setGuestId(g._id);
+                  setWelcomeCardGuestId(g._id);
+                  setMessages([]);
+                  setBookings([]);
+                  setItineraryMarkdown('');
+                  if (g.hotel_id) {
+                    setManualHotel(g.hotel_id);
+                  } else if (DEFAULT_GUEST_BRANDS[g._id]) {
+                    setManualHotel(DEFAULT_GUEST_BRANDS[g._id]);
+                  }
+                }}
+                style={{
+                  background: 'var(--panel-bg)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  padding: '3px 20px 3px 8px',
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  minWidth: '130px'
+                }}
+              >
+                {(guests || []).map(g => {
+                  if (!g) return null;
+                  return (
+                    <option key={g._id} value={g._id} style={{ background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
+                      {g.name} ({g._id})
+                    </option>
+                  );
+                })}
+              </select>
+              {!['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'].includes(guestId) && (
+                <button
+                  onClick={(e) => handleDeleteGuest(guestId, e)}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#f87171',
+                    borderRadius: '6px',
+                    padding: '3px 10px',
+                    fontSize: '0.78rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+
             <button
               onClick={async () => {
                 try {
@@ -1477,15 +1735,15 @@ function App() {
                 background: 'var(--primary-glow)',
                 border: '1px solid var(--primary)',
                 color: 'var(--primary)',
-                padding: '4px 12px',
-                borderRadius: '20px',
+                padding: '4px 10px',
+                borderRadius: '8px',
                 fontSize: '0.72rem',
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.25s ease',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '4px'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'var(--primary)';
@@ -1496,108 +1754,13 @@ function App() {
                 e.currentTarget.style.color = 'var(--primary)';
               }}
             >
-              <span>Launch Isolated Guest Portal (New Tab) 🚀</span>
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-glow)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                Portal
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
                 </svg>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Reservation Profile</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>
-                  {(guests || []).find(g => g && g._id === guestId)?.name || 'Alex Mercer'} ({guestId})
-                </strong>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Switch Guest Context:</span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {(guests || []).map(g => {
-                  if (!g) return null;
-                  const isActive = g._id === guestId;
-                  return (
-                    <button
-                      key={g._id}
-                      onClick={() => {
-                        setToken(null);
-                        setIsSecureModeActive(false);
-                        setIsGuestViewOnly(false);
-                        setTenantBrand(null);
-                        setGuestId(g._id);
-                        setWelcomeCardGuestId(g._id);
-                        setMessages([]);
-                        setBookings([]);
-                        setItineraryMarkdown('');
-                        if (g.hotel_id) {
-                          setManualHotel(g.hotel_id);
-                        } else if (DEFAULT_GUEST_BRANDS[g._id]) {
-                          setManualHotel(DEFAULT_GUEST_BRANDS[g._id]);
-                        }
-                      }}
-                      style={{
-                        background: isActive ? 'var(--primary)' : 'rgba(255, 255, 255, 0.02)',
-                        color: isActive ? '#000' : 'var(--text-primary)',
-                        border: isActive ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                        borderRadius: '30px',
-                        padding: '6px 14px',
-                        fontSize: '0.8rem',
-                        fontWeight: isActive ? 600 : 400,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                        boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.25)' : 'none'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                          e.currentTarget.style.borderColor = 'var(--primary)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                          e.currentTarget.style.borderColor = 'var(--border-color)';
-                        }
-                      }}
-                    >
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '50%',
-                        background: isActive ? 'rgba(0, 0, 0, 0.2)' : 'var(--primary-glow)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '0.62rem',
-                        color: isActive ? '#000' : 'var(--primary)',
-                        fontWeight: 'bold',
-                        textTransform: 'uppercase',
-                        flexShrink: 0
-                      }}>
-                        {g.name ? g.name[0] : 'G'}
-                      </div>
-                      <span>{g.name}</span>
-                      <span style={{ 
-                        fontSize: '0.68rem', 
-                        color: isActive ? 'rgba(0, 0, 0, 0.5)' : 'var(--text-muted)',
-                        fontWeight: 500
-                      }}>
-                        {g._id}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              </span>
+            </button>
           </div>
         </div>
       )}
@@ -1609,7 +1772,7 @@ function App() {
           <div className="landing-hero">
             <h2 className="landing-tagline">Eco-Tourism Coordinator for Bocas del Toro</h2>
             <p className="landing-intro">
-              Moving beyond basic text chat. A dedicated local travel agent that actively manages schedules, monitors live weather conditions, automatically proposes indoor reschedules during storms, and commits verified transactions directly to MongoDB Atlas.
+              Moving beyond basic text chat. A dedicated local travel agent that actively manages schedules, monitors live weather conditions, automatically proposes indoor reschedules during storms, and commits verified transactions directly to Amazon DynamoDB.
             </p>
           </div>
 
@@ -1653,9 +1816,162 @@ function App() {
                 </svg>
               </button>
             </div>
+
+            <div className="glass-card role-card">
+              <div className="role-icon-wrapper">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#3ecdc6' }}>
+                  <path d="M2 12h20M12 2v20" />
+                  <circle cx="12" cy="12" r="6" />
+                </svg>
+              </div>
+              <h3 className="role-title">Captain Portal</h3>
+              <p className="role-desc">
+                PWA mobile dispatch dashboard for local boat captains. View assigned tourist manifests, report sea-swell status, and broadcast real-time rain/safety reports back to the hotel.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <select 
+                  value={captainId} 
+                  onChange={(e) => setCaptainId(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    color: '#f8fafc',
+                    fontSize: '13px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {captains.map(c => (
+                    <option key={c._id} value={c._id}>{c.name} ({c.boat})</option>
+                  ))}
+                  {captains.length === 0 && (
+                    <>
+                      <option value="cap1">Captain Luis (La Estrella)</option>
+                      <option value="cap2">Captain Marco (Isla Bonita)</option>
+                      <option value="cap3">Captain Rosa (Coral Queen)</option>
+                    </>
+                  )}
+                </select>
+                <button className="btn-primary" onClick={() => setView('captain')}>
+                  Enter Captain Portal
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Benefits List */}
+          {/* Real-World Dispatch & PWA Onboarding Workflow Guide */}
+          <div className="landing-features" style={{ marginTop: '50px', borderTop: '1px solid var(--border-color)', paddingTop: '40px' }}>
+            <h3 className="section-title">Real-World Dispatch & Onboarding Workflow Guide</h3>
+            <p className="landing-intro" style={{ maxWidth: '750px', margin: '-10px auto 40px auto', fontSize: '0.95rem' }}>
+              Designed for luxury overwater resorts (like Nayara Bocas or La Coralina). This guide illustrates how hotels onboard staff, how boat captains install the app in seconds, and how guests stay synced.
+            </p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '24px',
+              maxWidth: '1200px',
+              margin: '0 auto',
+              textAlign: 'left'
+            }}>
+              {/* Step 1: Hotel Operator Setup */}
+              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#3ecdc6', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                  STEP 1
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                  <div style={{ color: 'var(--accent, #3ecdc6)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <line x1="9" y1="3" x2="9" y2="21" />
+                    </svg>
+                  </div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Hotel Desk Dispatch</h4>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                  The front desk operator logs into the <strong>Operator Console</strong>, defines boat capacities, and maps local captains. 
+                </p>
+                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                  <span style={{ color: 'var(--accent, #3ecdc6)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
+                  Sync guest details, assign a boat/captain, and click <strong>"Print Welcome Flyer"</strong> to produce a personalized card with a secure room check-in QR code.
+                </div>
+              </div>
+
+              {/* Step 2: Boat Captain Mobile PWA */}
+              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#0ea5e9', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                  STEP 2
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                  <div style={{ color: 'var(--primary)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Captain PWA Install</h4>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                  Captains don't need App Store downloads! They open the URL on mobile or scan a setup code, then tap <strong>"Add to Home Screen"</strong> for full PWA integration.
+                </p>
+                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                  <span style={{ color: 'var(--primary)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
+                  Open Captain Portal, tap install, select preferred language (<strong>Bilingual Switcher 🇪🇸 / 🇬🇧</strong>), accept dispatches, and log real-time sea swell reports.
+                </div>
+              </div>
+
+              {/* Step 3: Guest Mobile Companion */}
+              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#a855f7', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                  STEP 3
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                  <div style={{ color: '#a855f7' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                    </svg>
+                  </div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Guest Activation</h4>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                  Guests scan the room welcome QR code on their device. The secure token authorizes their timeline and skins the interface with the resort's brand.
+                </p>
+                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                  <span style={{ color: '#a855f7', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
+                  View active schedule, chat instantly with our Google ADK concierge, request tour booking extensions, and add custom timeline markers offline.
+                </div>
+              </div>
+
+              {/* Step 4: Closed-Loop Weather Swaps */}
+              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#f59e0b', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                  STEP 4
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                  <div style={{ color: 'var(--warning, #f59e0b)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 8.58" />
+                    </svg>
+                  </div>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Bilingual Closed Loop</h4>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                  A closed-loop dispatch ecosystem. If captains broadcast an English/Spanish weather warning, dispatches re-route immediately.
+                </p>
+                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                  <span style={{ color: 'var(--warning, #f59e0b)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
+                  Captains flag unsafe seas (in Spanish) &rarr; Front desk monitors live alerts &rarr; Gemini backend drafts reschedules &rarr; Guest confirms swap in 1-tap.
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="landing-features">
             <h3 className="section-title">Key Capabilities</h3>
             <div className="features-grid">
@@ -1709,16 +2025,23 @@ function App() {
                       <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
                     </svg>
                   </div>
-                  <div className="feature-title">Live MongoDB Transactions</div>
+                  <div className="feature-title">Live Amazon DynamoDB Transactions</div>
                 </div>
-                <div className="feature-desc">Transactions are safely committed back to MongoDB, accurately adjusting available slots and creating official itinerary receipts.</div>
+                <div className="feature-desc">Transactions are safely committed back to Amazon DynamoDB, accurately adjusting available slots and creating official itinerary receipts.</div>
               </div>
             </div>
           </div>
 
           {/* Interactive System Architecture Section */}
           <div className="landing-features" style={{ marginTop: '80px', borderTop: '1px solid var(--border-color)', paddingTop: '60px' }}>
-            <h3 className="section-title">🗺️ System Architecture & Developer Docs</h3>
+            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle' }}>
+                <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+                <line x1="9" y1="3" x2="9" y2="18" />
+                <line x1="15" y1="6" x2="15" y2="21" />
+              </svg>
+              System Architecture & Developer Docs
+            </h3>
             <p className="landing-intro" style={{ maxWidth: '750px', margin: '-20px auto 40px auto', fontSize: '0.95rem' }}>
               Explore our native Google Cloud multi-tenant SaaS integration. Click any layer on the left blueprint to inspect the endpoints, core AI agents, and underlying Model Context Protocol (MCP) tools in the right panel.
             </p>
@@ -1861,7 +2184,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Layer Card 5: MongoDB Persistence Layer */}
+                {/* Layer Card 5: Amazon DynamoDB Persistence Layer */}
                 <div 
                   className="glass-card" 
                   onClick={() => setArchActiveLayer('database')}
@@ -1884,8 +2207,8 @@ function App() {
                         </svg>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>5. MongoDB Persistence Layer</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Atlas Collections & Stay State Engine</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>5. Amazon DynamoDB Persistence Layer</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>DynamoDB Tables & Stay State Engine</div>
                       </div>
                     </div>
                     <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '10px', background: 'rgba(5, 150, 105, 0.1)', color: '#10b981' }}>
@@ -1921,22 +2244,27 @@ function App() {
                 {/* 1. All Summary view */}
                 {archActiveLayer === 'all' && (
                   <>
-                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0 }}>
-                      🌐 Platform Integration Blueprint
+                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="2" y1="12" x2="22" y2="12" />
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                      Platform Integration Blueprint
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', margin: 0 }}>
-                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Google's ADK, and MongoDB Atlas.
+                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Google's ADK, and Amazon DynamoDB.
                     </p>
                     <div style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '14px', background: 'rgba(255,255,255,0.01)', borderRadius: '0 8px 8px 0', padding: '10px 14px' }}>
                       <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '4px' }}>How data moves during weather shifts (Automated):</div>
                       <ol style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <li>OpenWeatherMap API or an IoT reef sensor transmits a live weather/swell alert (simulated in the Operator console for testing).</li>
-                        <li>FastAPI receives the weather/swell shift and automatically commits it to MongoDB.</li>
+                        <li>FastAPI receives the weather/swell shift and automatically commits it to Amazon DynamoDB.</li>
                         <li>The backend triggers an automated background check through the Google ADK model.</li>
                         <li>Gemini uses `check_weather` and `get_bookings` to scan for outdoor conflicts.</li>
                         <li>Finding a slot conflict, Gemini queries `get_tours` for indoor options.</li>
                         <li>Gemini creates a rescheduling swap payload, rendering a card in the chat.</li>
-                        <li>The guest approves the swap, triggering a live write back to Atlas.</li>
+                        <li>The guest approves the swap, triggering a live write back to Amazon DynamoDB.</li>
                       </ol>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -1950,7 +2278,7 @@ function App() {
                       </div>
                       <div style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Partner Database</div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>MongoDB Atlas</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Amazon DynamoDB</div>
                       </div>
                     </div>
                   </>
@@ -1960,7 +2288,12 @@ function App() {
                 {archActiveLayer === 'frontend' && (
                   <>
                     <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      💻 Client Interface Layer (Vite Web App)
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </svg>
+                      Client Interface Layer (Vite Web App)
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
                       A high-fidelity client app composed of separate role portals and synchronization sub-views.
@@ -1982,11 +2315,15 @@ function App() {
                 {/* 3. FastAPI SaaS Gateway View */}
                 {archActiveLayer === 'gateway' && (
                   <>
-                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0 }}>
-                      ⚙️ FastAPI SaaS Routing Gateway
+                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      </svg>
+                      FastAPI SaaS Routing Gateway
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      Connects client web layers with MongoDB data layers and our ADK reasoning loops.
+                      Connects client web layers with Amazon DynamoDB data layers and our ADK reasoning loops.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem', marginTop: '4px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
@@ -2021,8 +2358,20 @@ function App() {
                 {/* 4. Google ADK Agent Core View */}
                 {archActiveLayer === 'brain' && (
                   <>
-                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0 }}>
-                      🧠 Google Cloud Agent Development Kit (ADK) Core
+                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <rect x="4" y="4" width="16" height="16" rx="2" />
+                        <rect x="9" y="9" width="6" height="6" />
+                        <line x1="9" y1="1" x2="9" y2="4" />
+                        <line x1="15" y1="1" x2="15" y2="4" />
+                        <line x1="9" y1="20" x2="9" y2="23" />
+                        <line x1="15" y1="20" x2="15" y2="23" />
+                        <line x1="20" y1="9" x2="23" y2="9" />
+                        <line x1="20" y1="15" x2="23" y2="15" />
+                        <line x1="1" y1="9" x2="4" y2="9" />
+                        <line x1="1" y1="15" x2="4" y2="15" />
+                      </svg>
+                      Google Cloud Agent Development Kit (ADK) Core
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
                       IslandFlow runs natively on the Google ADK ecosystem, removing any reliance on competitive third-party orchestrators.
@@ -2044,8 +2393,11 @@ function App() {
                 {/* 5. Specialized MCP Tools View */}
                 {archActiveLayer === 'mcp' && (
                   <>
-                    <h4 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0 }}>
-                      🛠️ Custom Model Context Protocol (MCP) Tools Explorer
+                    <h4 style={{ fontSize: '1.15rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94-7.94L11 3.96l-3.5-3.5L3.96 4 1.36 1.4a6 6 0 0 0 7.94 7.94l3.77-3.77a1 1 0 0 0 0-1.4L11.47 5.7a1 1 0 0 0-1.4 0l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0L14.7 6.3z" />
+                      </svg>
+                      Custom Model Context Protocol (MCP) Tools Explorer
                     </h4>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
                       Select an MCP tool below to inspect its detailed parameters and business logic inside our FastMCP environment.
@@ -2099,7 +2451,7 @@ function App() {
                         {selectedToolId === 'get_tours' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>guest_id: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Fetches all available resort excursions from MongoDB, filtering out expired dates and tours that the specific guest has already completed.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Fetches all available resort excursions from Amazon DynamoDB, filtering out expired dates and tours that the specific guest has already completed.</div>
                           </>
                         )}
                         {selectedToolId === 'get_bookings' && (
@@ -2117,7 +2469,7 @@ function App() {
                         {selectedToolId === 'add_booking' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>guest_id: str, tour_id: str, date: str, slot: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Adds a new excursion item into Atlas, reducing the excursion capacity securely.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Adds a new excursion item into DynamoDB, reducing the excursion capacity securely.</div>
                           </>
                         )}
                         {selectedToolId === 'reschedule_booking' && (
@@ -2129,7 +2481,7 @@ function App() {
                         {selectedToolId === 'cancel_booking' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>booking_id: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Removes the target booking document from Atlas, releases the reserved spot, and fires cancellation tasks to local captains and operators.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Removes the target booking document from DynamoDB, releases the reserved spot, and fires cancellation tasks to local captains and operators.</div>
                           </>
                         )}
                         {selectedToolId === 'update_guest_profile' && (
@@ -2155,14 +2507,19 @@ function App() {
                   </>
                 )}
 
-                {/* 6. MongoDB View */}
+                {/* 6. Amazon DynamoDB View */}
                 {archActiveLayer === 'database' && (
                   <>
-                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0 }}>
-                      🍃 MongoDB Persistence Layer
+                    <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                        <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+                      </svg>
+                      Amazon DynamoDB Persistence Layer
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      An Atlas-backed persistent structure tracking resort resources, itineraries, and tenant color presets.
+                      A DynamoDB-backed persistent structure tracking resort resources, itineraries, and tenant color presets.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem', marginTop: '4px' }}>
                       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '8px 12px', borderRadius: '6px' }}>
@@ -2201,7 +2558,7 @@ function App() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
-                Chat Concierge
+                {lang === 'es' ? 'Asistente Chat' : 'Chat Concierge'}
               </button>
             </Magnet>
             <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
@@ -2216,19 +2573,25 @@ function App() {
                   <line x1="8" y1="2" x2="8" y2="6" />
                   <line x1="3" y1="10" x2="21" y2="10" />
                 </svg>
-                My Itinerary
+                {lang === 'es' ? 'Mi Itinerario' : 'My Itinerary'}
               </button>
             </Magnet>
           </div>
 
           <div className="main-grid">
             <div className="guest-col-schedule" style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
-              <WeatherHorizon logistics={logistics} />
-              <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} />
-              <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
+              <div className="fade-in-entry stagger-1">
+                <WeatherHorizon logistics={logistics} lang={lang} />
+              </div>
+              <div className="fade-in-entry stagger-2">
+                <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} lang={lang} />
+              </div>
+              <div className="fade-in-entry stagger-3">
+                <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
+              </div>
               
               {/* Urgent Human Front Desk Emergency Assistance Card */}
-              <div className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)' }}>
+              <div className="glass-card fade-in-entry stagger-4" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)', boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2236,8 +2599,12 @@ function App() {
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>Need Immediate Human Assistance?</h4>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.</p>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>
+                      {lang === 'es' ? '¿Necesita Asistencia de Recepción?' : 'Need Immediate Human Assistance?'}
+                    </h4>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>
+                      {lang === 'es' ? 'Si tiene inconvenientes con su viaje o una emergencia, llame directo a Recepción 24/7.' : 'If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.'}
+                    </p>
                   </div>
                 </div>
                 <a 
@@ -2261,37 +2628,11 @@ function App() {
                   onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
                 >
-                  Call Front Desk
+                  Call
                 </a>
               </div>
             </div>
-
-            <div className="guest-col-chat" style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'chat-widget', position: 'sticky', top: '24px', alignSelf: 'start' }}>
-              {/* 🧠 Guest Persistent Memory Sidebar Widget */}
-              <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-                  <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
-                  <div>
-                    <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>Guest Persistent Memory</h4>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
-                  </div>
-                </div>
-                
-                {guestMemories && guestMemories.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {guestMemories.map((mem, i) => (
-                      <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                        {mem}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
-                    No memories extracted yet. Tell Qwen your allergies, preferences, or scheduling constraints to see them sync in real-time!
-                  </div>
-                )}
-              </div>
-
+            <div className="guest-col-chat fade-in-entry stagger-5" style={{ viewTransitionName: 'chat-widget', position: 'sticky', top: '24px', alignSelf: 'start' }}>
               <ChatWidget 
                 messages={messages} 
                 onSendMessage={handleSendMessage} 
@@ -2307,16 +2648,34 @@ function App() {
         </div>
       )}
 
-
       {/* Render Operator Console View */}
-      {view === 'operator' && (
+      {view === 'operator' && !operatorHotelId && (
+        <div className="fade-in-entry stagger-1" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '24px' }}>
+          <OperatorLoginForm 
+            onLoginSuccess={(hotelId, hotelName) => {
+              transitionState(() => {
+                safeLocalStorageSet('operatorHotelId', hotelId);
+                safeLocalStorageSet('operatorHotelName', hotelName);
+                setOperatorHotelId(hotelId);
+                setOperatorHotelName(hotelName);
+              });
+            }}
+          />
+        </div>
+      )}
+
+      {view === 'operator' && operatorHotelId && (
         <div className="main-grid">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
-            <WeatherHorizon logistics={logistics} />
-            <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} />
+            <div className="fade-in-entry stagger-1">
+              <WeatherHorizon logistics={logistics} lang={lang} />
+            </div>
+            <div className="fade-in-entry stagger-2">
+              <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} lang={lang} />
+            </div>
             
             {/* Onboarding Welcome Flyer Generator */}
-            <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="glass-card fade-in-entry stagger-3" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2338,7 +2697,7 @@ function App() {
                     onClick={() => setFlyerDropdownOpen(!flyerDropdownOpen)}
                     className={`custom-dropdown-trigger ${flyerDropdownOpen ? 'active' : ''}`}
                     style={{
-                      background: 'var(--slot-bg)',
+                      background: 'var(--bg-color, #ffffff)',
                       borderColor: 'var(--border-color)',
                       color: 'var(--text-primary)',
                       display: 'flex',
@@ -2491,7 +2850,7 @@ function App() {
                     {/* The Printable Container */}
                     <div className="print-welcome-card-area glass-card" style={{
                       padding: '24px',
-                      background: 'var(--panel-bg)',
+                      background: 'var(--panel-bg, #0c0c0f)',
                       border: '1px dashed var(--primary)',
                       borderRadius: '12px',
                       textAlign: 'center',
@@ -2531,60 +2890,491 @@ function App() {
                       </span>
                     </div>
 
-                    <button 
-                      className="btn-primary" 
-                      onClick={() => {
-                        window.print();
-                      }}
-                      style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="6 9 6 2 18 2 18 9" />
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                        <rect x="6" y="14" width="12" height="8" />
-                      </svg>
-                      Print Welcome Card for {selectedGuest.name}
-                    </button>
+                    <Magnet style={{ width: '100%', display: 'block' }} strength={12} padding={25}>
+                      <button 
+                        className="btn-primary" 
+                        onClick={() => {
+                          window.print();
+                        }}
+                        style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center', width: '100%' }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="6 9 6 2 18 2 18 9" />
+                          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                          <rect x="6" y="14" width="12" height="8" />
+                        </svg>
+                        Print Welcome Card for {selectedGuest.name}
+                      </button>
+                    </Magnet>
                   </div>
                 );
               })()}
             </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'control-panel' }}>
-            {/* 🧠 Guest Persistent Memory Sidebar Widget */}
-            <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', border: '1px solid var(--border-color)', boxShadow: '0 4px 20px rgba(168, 255, 53, 0.02)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
-                <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 0 6px rgba(168, 255, 53, 0.4))' }}>🧠</span>
-                <div>
-                  <h4 style={{ fontSize: '0.9rem', fontWeight: 650, color: 'var(--text-primary)', margin: 0 }}>
-                    Persistent Memory: {(guests || []).find(g => g && g._id === guestId)?.name || 'Guest'}
-                  </h4>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0, fontWeight: 300 }}>Extracted dynamically across chat sessions</p>
-                </div>
+
+            {/* Boat Captain PWA Onboarding Cards */}
+            <div className="glass-card fade-in-entry stagger-4" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Captain PWA Onboarding & Setup Cards
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Select a marine boat captain to generate a bilingual setup flyer with a personalized QR code for instant PWA installation (no App Store download required).
+                </p>
               </div>
-              
-              {guestMemories && guestMemories.length > 0 ? (
-                <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {guestMemories.map((mem, i) => (
-                    <li key={i} style={{ fontSize: '0.78rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
-                      {mem}
-                    </li>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '14px' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Select Captain:</span>
+                <select
+                  value={onboardingCaptainId}
+                  onChange={(e) => setOnboardingCaptainId(e.target.value)}
+                  style={{
+                    background: 'var(--bg-color, #ffffff)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-primary)',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    outline: 'none',
+                    colorScheme: 'light',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {(captains || []).map(c => (
+                    <option key={c._id} value={c._id}>{c.name} ({c.boat || 'Water Taxi'})</option>
                   ))}
-                </ul>
+                  {captains.length === 0 && (
+                    <>
+                      <option value="cap1">Captain Luis (La Estrella)</option>
+                      <option value="cap2">Captain Marco (Isla Bonita)</option>
+                      <option value="cap3">Captain Rosa (Coral Queen)</option>
+                    </>
+                  )}
+                </select>
+              </div>
+
+              {(() => {
+                const activeCapId = onboardingCaptainId || (captains[0]?._id) || 'cap1';
+                const selectedCaptain = (captains || []).find(c => c && c._id === activeCapId) || { _id: activeCapId, name: activeCapId === 'cap1' ? 'Captain Luis' : activeCapId === 'cap2' ? 'Captain Marco' : 'Captain Rosa', boat: activeCapId === 'cap1' ? 'La Estrella' : activeCapId === 'cap2' ? 'Isla Bonita' : 'Coral Queen' };
+                if (!selectedCaptain) return null;
+
+                const captainDirectLink = `${window.location.origin}?view=captain&captain_id=${selectedCaptain._id}`;
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* The Printable Captain Card */}
+                    <div className="print-welcome-card-area glass-card" style={{
+                      padding: '24px',
+                      background: 'var(--panel-bg, #0c0c0f)',
+                      border: '1px dashed var(--primary)',
+                      borderRadius: '12px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}>
+                      <span style={{ fontSize: '0.72rem', color: '#0ea5e9', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                        Bocas del Toro Marine Fleet Setup
+                      </span>
+                      <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', color: 'var(--text-primary)', margin: 0 }}>
+                        {selectedCaptain.name} &bull; {selectedCaptain.boat}
+                      </h3>
+                      
+                      {/* Grid for Bilingual Steps */}
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr', 
+                        gap: '20px', 
+                        textAlign: 'left', 
+                        width: '100%', 
+                        maxWidth: '650px',
+                        marginTop: '10px',
+                        borderTop: '1px solid var(--border-color)',
+                        paddingTop: '16px'
+                      }}>
+                        {/* English Instructions */}
+                        <div style={{ borderRight: '1px solid var(--border-color)', paddingRight: '20px' }}>
+                          <h4 style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            English Installation
+                          </h4>
+                          <ol style={{ fontSize: '0.78rem', color: '#94a3b8', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <li>Scan the QR code below using your mobile phone camera.</li>
+                            <li>Tap your browser's <strong>Share / Options</strong> button.</li>
+                            <li>Tap <strong>"Add to Home Screen"</strong> to download the PWA instantly.</li>
+                            <li>Open from your home screen to receive live boat dispatches in Spanish or English.</li>
+                          </ol>
+                        </div>
+
+                        {/* Spanish Instructions */}
+                        <div style={{ paddingLeft: '10px' }}>
+                          <h4 style={{ fontSize: '0.85rem', color: '#f8fafc', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            Instalación en Español
+                          </h4>
+                          <ol style={{ fontSize: '0.78rem', color: '#94a3b8', paddingLeft: '16px', margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <li>Escanee el código QR con la cámara de su teléfono móvil.</li>
+                            <li>Toque el botón de <strong>Compartir / Opciones</strong> de su navegador.</li>
+                            <li>Toque <strong>"Añadir a pantalla de inicio"</strong> para descargar la PWA al instante.</li>
+                            <li>Abra la app desde su pantalla de inicio para recibir despachos en vivo en español.</li>
+                          </ol>
+                        </div>
+                      </div>
+
+                      {/* QR Code Container */}
+                      <div style={{
+                        background: 'white',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        display: 'inline-block',
+                        margin: '12px 0 6px 0',
+                        boxShadow: '0 8px 20px rgba(0,0,0,0.25)'
+                      }}>
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&color=0f172b&data=${encodeURIComponent(captainDirectLink)}`} 
+                          alt="Captain Onboarding QR Code" 
+                          style={{ width: '120px', height: '120px', display: 'block' }}
+                        />
+                      </div>
+
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-dim)', fontStyle: 'italic' }}>
+                        Secure PWA target: {selectedCaptain.name} ({selectedCaptain.boat})
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                      <Magnet style={{ width: '100%', display: 'block' }} strength={12} padding={25}>
+                        <button 
+                          className="btn-primary" 
+                          onClick={() => {
+                            window.print();
+                          }}
+                          style={{ padding: '10px 16px', display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center', background: 'var(--primary)', color: 'var(--primary-btn-text, #000000)', border: 'none', width: '100%', borderRadius: '8px', fontWeight: 650 }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                          </svg>
+                          Print Setup Card for {selectedCaptain.name}
+                        </button>
+                      </Magnet>
+
+                      {/* Dynamic Digital Onboarding Dispatch Tools (No Paper Needed!) */}
+                      <div style={{
+                        padding: '16px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        textAlign: 'left'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '6px', borderRadius: '8px', display: 'flex' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                          </div>
+                          <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {lang === 'es' ? 'Despacho Digital Instantáneo' : 'Instant Digital Dispatch Tools'}
+                          </h4>
+                        </div>
+                        
+                        <p style={{ margin: 0, fontSize: '0.74rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                          {lang === 'es' 
+                            ? 'Envíe el enlace del portal directamente al teléfono del capitán. No necesitan escanear nada; el enlace se abre en su navegador para instalar la PWA.' 
+                            : "Send the portal link directly to the captain's phone. They do not need to scan anything; the link opens instantly in their browser to install the PWA."}
+                        </p>
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
+                          {/* Copy Link Button */}
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(captainDirectLink);
+                              setPushToastText(lang === 'es' ? "✓ ¡Enlace del capitán copiado al portapapeles!" : "✓ Captain's portal link copied to clipboard!");
+                            }}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              borderRadius: '8px',
+                              padding: '8px 14px',
+                              color: '#f8fafc',
+                              fontSize: '0.78rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s',
+                              flex: '1 1 140px',
+                              justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                            {lang === 'es' ? 'Copiar Enlace' : 'Copy Direct Link'}
+                          </button>
+
+                          {/* WhatsApp Dispatch Button */}
+                          <button
+                            onClick={() => {
+                              const cleanPhone = (selectedCaptain.phone || '').replace(/[^0-9+]/g, '');
+                              const text = lang === 'es'
+                                ? `¡Hola ${selectedCaptain.name}! Aquí tiene su enlace personal para el Portal de Mando de IslandFlow. Toque para abrirlo e instalarlo como aplicación en su pantalla de inicio: ${captainDirectLink}`
+                                : `Hello ${selectedCaptain.name}! Here is your personal IslandFlow Captain Portal link. Tap to open and install as an app on your phone: ${captainDirectLink}`;
+                              const waUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(text)}`;
+                              window.open(waUrl, '_blank');
+                              setPushToastText(lang === 'es' ? `💬 Abriendo despacho en WhatsApp para ${selectedCaptain.name}...` : `💬 Opening WhatsApp dispatch for ${selectedCaptain.name}...`);
+                            }}
+                            style={{
+                              background: 'rgba(34, 197, 94, 0.15)',
+                              border: '1px solid rgba(34, 197, 94, 0.3)',
+                              borderRadius: '8px',
+                              padding: '8px 14px',
+                              color: '#4ade80',
+                              fontSize: '0.78rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s',
+                              flex: '1 1 140px',
+                              justifyContent: 'center'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.25)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.15)'; }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                            </svg>
+                            {lang === 'es' ? 'Enviar por WhatsApp' : 'Dispatch via WhatsApp'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Active Itinerary Bookings & Boat Captains Assignment */}
+            <div className="glass-card fade-in-entry stagger-5" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                  Boat Captain Assignments
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Assign certified water-taxi or tour boat captains to {(guests || []).find(g => g && g._id === welcomeCardGuestId)?.name || 'the guest'}'s booked excursions.
+                </p>
+              </div>
+
+              {bookings.filter(b => b.guest_id && welcomeCardGuestId && String(b.guest_id) === String(welcomeCardGuestId)).length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                  No active bookings for this guest itinerary.
+                </div>
               ) : (
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 0', textAlign: 'center' }}>
-                  No memories extracted yet for this guest. Chat with them to record preferences!
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {bookings
+                    .filter(b => b.guest_id && welcomeCardGuestId && String(b.guest_id) === String(welcomeCardGuestId))
+                    .map(b => {
+                      const tour = tours.find(t => t._id === b.tour_id);
+                      return (
+                        <div 
+                          key={b._id} 
+                          style={{ 
+                            background: 'rgba(255, 255, 255, 0.02)', 
+                            border: '1px solid var(--border-color)', 
+                            borderRadius: '10px', 
+                            padding: '12px 16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '12px',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {tour?.name || 'Eco Excursion'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              📅 {b.date} &bull; <span style={{ textTransform: 'capitalize' }}>{b.slot}</span>
+                            </div>
+                            {b.captain_status && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                                <span style={{ 
+                                  fontSize: '0.68rem', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '6px',
+                                  background: b.captain_status === 'confirmed' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(14, 165, 233, 0.12)',
+                                  color: b.captain_status === 'confirmed' ? '#22c55e' : '#0ea5e9',
+                                  border: `1px solid ${b.captain_status === 'confirmed' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
+                                  fontWeight: 600,
+                                  textTransform: 'capitalize'
+                                }}>
+                                  📡 {b.captain_status.replace('-', ' ')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <select
+                              value={b.captain_id || ''}
+                              onChange={(e) => handleAssignCaptain(b._id, e.target.value)}
+                              style={{
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                color: '#f8fafc',
+                                fontSize: '13px',
+                                outline: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <option value="">-- Unassigned --</option>
+                              {captains.map(c => (
+                                <option key={c._id} value={c._id}>{c.name} ({c.boat})</option>
+                              ))}
+                              {captains.length === 0 && (
+                                <>
+                                  <option value="cap1">Captain Luis (La Estrella)</option>
+                                  <option value="cap2">Captain Marco (Isla Bonita)</option>
+                                  <option value="cap3">Captain Rosa (Coral Queen)</option>
+                                </>
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })
+                  }
                 </div>
               )}
             </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', viewTransitionName: 'control-panel' }}>
+            <div className="fade-in-entry stagger-6">
+              <ControlPanel 
+                logistics={logistics} 
+                onSimulate={handleSimulate} 
+                onReset={handleReset} 
+                agentLogs={agentLogs} 
+                loading={loading}
+              />
+            </div>
 
-            <ControlPanel 
-              logistics={logistics} 
-              onSimulate={handleSimulate} 
-              onReset={handleReset} 
-              agentLogs={agentLogs} 
-              loading={loading}
-            />
+            {/* SaaS B2B Product Analytics & AWS Telemetry KPI Dashboard */}
+            <div className="glass-card fade-in-entry stagger-7" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', margin: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="20" x2="18" y2="10" />
+                      <line x1="12" y1="20" x2="12" y2="4" />
+                      <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    B2B SaaS Product Analytics
+                  </h3>
+                  <span style={{ 
+                    background: 'rgba(16, 185, 129, 0.08)', 
+                    color: '#10b981', 
+                    border: '1px solid rgba(16, 185, 129, 0.25)', 
+                    padding: '3px 10px', 
+                    borderRadius: '20px', 
+                    fontSize: '0.65rem', 
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    letterSpacing: '0.04em'
+                  }}>
+                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+                    SYSTEM ACTIVE
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4' }}>
+                  Real-time guest value metrics, feature adoption parameters, and live system telemetry events for the white-label luxury resort accounts.
+                </p>
+              </div>
+
+              {/* KPI Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--primary)' }}>94.2%</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>AI Concierge Engagement</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f59e0b' }}>88.5%</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>Replan Proposal Swap Rate</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>1.2s</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>Avg Dispatch Latency</div>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#10b981' }}>+84</div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px', fontWeight: 500 }}>Net Friction Reduction NPS</div>
+                </div>
+              </div>
+
+              {/* Live SDK Telemetry Logger */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+                  Live System Telemetry Stream
+                </span>
+                <div style={{ 
+                  background: 'rgba(15, 23, 42, 0.6)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '10px', 
+                  padding: '12px', 
+                  fontSize: '0.72rem', 
+                  fontFamily: 'monospace', 
+                  maxHeight: '130px', 
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <div style={{ color: '#a7f3d0' }}>
+                    <span style={{ color: 'var(--text-dim)' }}>[Telemetry]</span> Database connection established (AWS DynamoDB)
+                  </div>
+                  {itineraryMarkdown && (
+                    <div style={{ color: '#e0f2fe' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>[Telemetry]</span> Itinerary document loaded for guest "{guestId}"
+                    </div>
+                  )}
+                  <div style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.68rem', marginTop: '4px' }}>
+                    * Listening for new API transactions and operations...
+                  </div>
+                </div>
+              </div>
+
+              {/* B2B Framework Info */}
+              <div style={{ 
+                background: 'var(--primary-glow)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: '10px', 
+                padding: '12px', 
+                fontSize: '0.7rem', 
+                color: 'var(--text-muted)', 
+                lineHeight: '1.4'
+              }}>
+                <div style={{ fontWeight: 600, color: 'var(--primary)', marginBottom: '2px' }}>AWS DynamoDB Data Strategy:</div>
+                Each resort tenant represents a partitioned key-space. Guests and hotel staff represent unique user session contexts. This enables deep SaaS product analyses, mapping workflow efficiency directly to guest satisfaction and hotel operational retention KPIs.
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -2732,8 +3522,8 @@ function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginTop: '4px' }}>
                   
                   {/* Step 1 */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.03)', fontFamily: 'var(--font-serif)' }}>01</div>
+                  <div style={{ background: 'var(--slot-bg, rgba(255, 255, 255, 0.5))', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', transition: 'all 0.2s ease' }}>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--border-color)', opacity: 0.35, fontFamily: 'var(--font-serif)' }}>01</div>
                     <div style={{ color: 'var(--primary)', background: 'var(--primary-glow)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -2749,8 +3539,8 @@ function App() {
                   </div>
 
                   {/* Step 2 */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.03)', fontFamily: 'var(--font-serif)' }}>02</div>
+                  <div style={{ background: 'var(--slot-bg, rgba(255, 255, 255, 0.5))', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', transition: 'all 0.2s ease' }}>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--border-color)', opacity: 0.35, fontFamily: 'var(--font-serif)' }}>02</div>
                     <div style={{ color: 'var(--primary)', background: 'var(--primary-glow)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="4" width="18" height="12" rx="2" />
@@ -2766,8 +3556,8 @@ function App() {
                   </div>
 
                   {/* Step 3 */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.03)', fontFamily: 'var(--font-serif)' }}>03</div>
+                  <div style={{ background: 'var(--slot-bg, rgba(255, 255, 255, 0.5))', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', transition: 'all 0.2s ease' }}>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--border-color)', opacity: 0.35, fontFamily: 'var(--font-serif)' }}>03</div>
                     <div style={{ color: 'var(--primary)', background: 'var(--primary-glow)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -2783,8 +3573,8 @@ function App() {
                   </div>
 
                   {/* Step 4 */}
-                  <div style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.03)', fontFamily: 'var(--font-serif)' }}>04</div>
+                  <div style={{ background: 'var(--slot-bg, rgba(255, 255, 255, 0.5))', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', transition: 'all 0.2s ease' }}>
+                    <div style={{ position: 'absolute', top: '12px', right: '12px', fontSize: '1.5rem', fontWeight: 900, color: 'var(--border-color)', opacity: 0.35, fontFamily: 'var(--font-serif)' }}>04</div>
                     <div style={{ color: 'var(--primary)', background: 'var(--primary-glow)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 22c1-4 1-8 0-12" />
@@ -2820,7 +3610,7 @@ function App() {
                     Manual Guest Check-In Form
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your active database.
+                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your Amazon DynamoDB cluster.
                   </p>
                 </div>
 
@@ -2839,14 +3629,25 @@ function App() {
                         value={manualName}
                         onChange={(e) => setManualName(e.target.value)}
                         style={{
-                          background: 'rgba(15, 23, 42, 0.4)',
+                          background: 'var(--bg-color, #ffffff)',
                           border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           color: 'var(--text-primary)',
                           padding: '10px 12px',
                           fontSize: '0.88rem',
                           outline: 'none',
-                          width: '100%'
+                          width: '100%',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'var(--primary)';
+                          e.target.style.background = '#ffffff';
+                          e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'var(--border-color)';
+                          e.target.style.background = 'var(--bg-color, #ffffff)';
+                          e.target.style.boxShadow = 'none';
                         }}
                       />
                     </div>
@@ -2861,14 +3662,25 @@ function App() {
                         value={manualPhone}
                         onChange={(e) => setManualPhone(e.target.value)}
                         style={{
-                          background: 'rgba(15, 23, 42, 0.4)',
+                          background: 'var(--bg-color, #ffffff)',
                           border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           color: 'var(--text-primary)',
                           padding: '10px 12px',
                           fontSize: '0.88rem',
                           outline: 'none',
-                          width: '100%'
+                          width: '100%',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'var(--primary)';
+                          e.target.style.background = '#ffffff';
+                          e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'var(--border-color)';
+                          e.target.style.background = 'var(--bg-color, #ffffff)';
+                          e.target.style.boxShadow = 'none';
                         }}
                       />
                     </div>
@@ -2899,7 +3711,7 @@ function App() {
                             key={hotel._id}
                             onClick={() => setManualHotel(hotel._id)}
                             style={{
-                              background: isSelected ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.2)',
+                              background: isSelected ? 'var(--slot-bg, rgba(255, 255, 255, 0.65))' : 'var(--bg-card-nested, rgba(0, 0, 0, 0.03))',
                               border: '2px solid',
                               borderColor: isSelected ? accentColor : 'var(--border-color)',
                               borderRadius: '12px',
@@ -2910,7 +3722,7 @@ function App() {
                               flexDirection: 'column',
                               gap: '8px',
                               position: 'relative',
-                              boxShadow: 'none',
+                              boxShadow: isSelected ? `0 4px 14px ${previewGlow}` : 'none',
                               transform: isSelected ? 'scale(1.02)' : 'none'
                             }}
                           >
@@ -2919,9 +3731,9 @@ function App() {
                                 width: '28px',
                                 height: '28px',
                                 borderRadius: '50%',
-                                background: 'rgba(0,0,0,0.3)',
+                                background: 'var(--slot-empty-bg, rgba(255, 255, 255, 0.35))',
                                 border: '1.5px solid',
-                                borderColor: isSelected ? accentColor : 'rgba(255,255,255,0.1)',
+                                borderColor: isSelected ? accentColor : 'var(--border-color)',
                                 boxShadow: 'none',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -3020,14 +3832,26 @@ function App() {
                         value={manualStayStart}
                         onChange={(e) => setManualStayStart(e.target.value)}
                         style={{
-                          background: 'rgba(15, 23, 42, 0.4)',
+                          background: 'var(--bg-color, #ffffff)',
                           border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           color: 'var(--text-primary)',
                           padding: '10px 12px',
                           fontSize: '0.88rem',
                           outline: 'none',
-                          width: '100%'
+                          width: '100%',
+                          colorScheme: 'light',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'var(--primary)';
+                          e.target.style.background = '#ffffff';
+                          e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'var(--border-color)';
+                          e.target.style.background = 'var(--bg-color, #ffffff)';
+                          e.target.style.boxShadow = 'none';
                         }}
                       />
                     </div>
@@ -3040,14 +3864,26 @@ function App() {
                         value={manualStayEnd}
                         onChange={(e) => setManualStayEnd(e.target.value)}
                         style={{
-                          background: 'rgba(15, 23, 42, 0.4)',
+                          background: 'var(--bg-color, #ffffff)',
                           border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           color: 'var(--text-primary)',
                           padding: '10px 12px',
                           fontSize: '0.88rem',
                           outline: 'none',
-                          width: '100%'
+                          width: '100%',
+                          colorScheme: 'light',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'var(--primary)';
+                          e.target.style.background = '#ffffff';
+                          e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'var(--border-color)';
+                          e.target.style.background = 'var(--bg-color, #ffffff)';
+                          e.target.style.boxShadow = 'none';
                         }}
                       />
                     </div>
@@ -3073,10 +3909,10 @@ function App() {
                               }
                             }}
                             style={{
-                              background: isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.03)',
+                              background: isSelected ? 'var(--primary)' : 'var(--bg-color, #ffffff)',
                               border: '1px solid',
                               borderColor: isSelected ? 'var(--primary)' : 'var(--border-color)',
-                              color: isSelected ? '#0f172a' : 'var(--text-muted)',
+                              color: isSelected ? 'var(--primary-btn-text, #ffffff)' : 'var(--text-primary)',
                               padding: '6px 12px',
                               borderRadius: '16px',
                               fontSize: '0.74rem',
@@ -3104,16 +3940,27 @@ function App() {
                       onChange={(e) => setManualNotes(e.target.value)}
                       rows={2}
                       style={{
-                        background: 'rgba(15, 23, 42, 0.4)',
+                        background: 'var(--bg-color, #ffffff)',
                         border: '1px solid var(--border-color)',
-                        borderRadius: '8px',
+                        borderRadius: '12px',
                         color: 'var(--text-primary)',
                         padding: '10px 12px',
                         fontSize: '0.88rem',
                         outline: 'none',
                         width: '100%',
                         resize: 'none',
-                        fontFamily: 'var(--font-sans)'
+                        fontFamily: 'var(--font-sans)',
+                        transition: 'all 0.25s ease'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = 'var(--primary)';
+                        e.target.style.background = '#ffffff';
+                        e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = 'var(--border-color)';
+                        e.target.style.background = 'var(--bg-color, #ffffff)';
+                        e.target.style.boxShadow = 'none';
                       }}
                     />
                   </div>
@@ -3129,7 +3976,7 @@ function App() {
                       border: '1px solid var(--border-color)',
                       padding: '10px',
                       borderRadius: '8px',
-                      background: 'rgba(0, 0, 0, 0.15)',
+                      background: 'var(--bg-card-nested, rgba(0, 0, 0, 0.03))',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '8px'
@@ -3138,7 +3985,7 @@ function App() {
                         const isChecked = manualBookings.some(b => b.tour_id === tour._id);
                         const bookingDetail = manualBookings.find(b => b.tour_id === tour._id);
                         return (
-                          <div key={tour._id} style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '8px' }}>
+                          <div key={tour._id} style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <input 
                                 type="checkbox"
@@ -3152,7 +3999,7 @@ function App() {
                                     
                                     let nextDate = manualStayStart;
                                     let nextSlot = tour.slots?.[0] || 'morning';
-
+ 
                                     if (manualBookings.length > 0) {
                                       // Sort existing bookings chronologically
                                       const sortedBookings = [...manualBookings].sort((a, b) => {
@@ -3193,7 +4040,7 @@ function App() {
                                         nextSlot = sortedTourSlots[0] || 'morning';
                                       }
                                     }
-
+ 
                                     setManualBookings(prev => [...prev, {
                                       tour_id: tour._id,
                                       date: nextDate,
@@ -3211,9 +4058,9 @@ function App() {
                                 <span style={{ color: 'var(--primary)', fontWeight: 600 }}>${tour.price}</span>
                               </label>
                             </div>
-
+ 
                             {isChecked && bookingDetail && (
-                              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px', marginLeft: '22px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px', borderRadius: '6px' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '8px', marginLeft: '22px', background: 'var(--slot-bg, rgba(255,255,255,0.5))', border: '1px solid var(--border-color)', padding: '8px', borderRadius: '6px' }}>
                                 <div>
                                   <label style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Excursion Date</label>
                                   <input 
@@ -3226,12 +4073,13 @@ function App() {
                                       setManualBookings(prev => prev.map(b => b.tour_id === tour._id ? { ...b, date: dVal } : b));
                                     }}
                                     style={{
-                                      background: '#090d16',
-                                      border: '1px solid rgba(255,255,255,0.08)',
+                                      background: 'var(--bg-color, hsla(38, 30%, 98%, 1))',
+                                      border: '1px solid var(--border-color)',
                                       borderRadius: '4px',
                                       color: 'var(--text-primary)',
                                       padding: '4px 6px',
                                       fontSize: '0.74rem',
+                                      colorScheme: 'light',
                                       width: '100%'
                                     }}
                                   />
@@ -3245,8 +4093,8 @@ function App() {
                                       setManualBookings(prev => prev.map(b => b.tour_id === tour._id ? { ...b, slot: sVal } : b));
                                     }}
                                     style={{
-                                      background: '#090d16',
-                                      border: '1px solid rgba(255,255,255,0.08)',
+                                      background: 'var(--bg-color, hsla(38, 30%, 98%, 1))',
+                                      border: '1px solid var(--border-color)',
                                       borderRadius: '4px',
                                       color: 'var(--text-primary)',
                                       padding: '4px 6px',
@@ -3392,45 +4240,51 @@ function App() {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
-                      <button 
-                        onClick={() => {
-                          const url = successGuest.secure_token 
-                            ? `${window.location.origin}/?token=${successGuest.secure_token}`
-                            : `${window.location.origin}/?guest_id=${successGuest.guest_id}&secure=true`;
-                          window.open(url, '_blank');
-                        }}
-                        style={{
-                          background: 'var(--primary)',
-                          color: '#000',
-                          border: 'none',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          fontSize: '0.88rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)';
-                        }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                          <polyline points="15 3 21 3 21 9" />
-                          <line x1="10" y1="14" x2="21" y2="3" />
-                        </svg>
-                        Launch Isolated Guest Portal (New Tab) 🚀
-                      </button>
+                      <Magnet style={{ width: '100%', display: 'block' }} strength={15} padding={35}>
+                        <button 
+                          onClick={() => {
+                            const url = successGuest.secure_token 
+                              ? `${window.location.origin}/?token=${successGuest.secure_token}`
+                              : `${window.location.origin}/?guest_id=${successGuest.guest_id}&secure=true`;
+                            window.open(url, '_blank');
+                          }}
+                          style={{
+                            background: 'var(--primary)',
+                            color: '#000',
+                            border: 'none',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            fontSize: '0.88rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+                            width: '100%',
+                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)';
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <polyline points="15 3 21 3 21 9" />
+                            <line x1="10" y1="14" x2="21" y2="3" />
+                          </svg>
+                          <span>Launch Isolated Guest Portal (New Tab)</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px' }}>
+                            <polyline points="9 18 15 12 9 6" />
+                          </svg>
+                        </button>
+                      </Magnet>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                         <button
@@ -3576,7 +4430,7 @@ function App() {
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
-                      <span><strong>Upon submission:</strong> This guest will be recorded in MongoDB, a secure magic-link QR will generate, and you can instantly launch their 100% isolated private companion portal or simulate them here.</span>
+                      <span><strong>Upon submission:</strong> This guest will be recorded in Amazon DynamoDB, a secure magic-link QR will generate, and you can instantly launch their 100% isolated private companion portal or simulate them here.</span>
                     </div>
                   </div>
                 )}
@@ -3601,14 +4455,25 @@ function App() {
                         value={extractionUrl}
                         onChange={(e) => setExtractionUrl(e.target.value)}
                         style={{
-                          background: 'rgba(15, 23, 42, 0.4)',
+                          background: 'var(--bg-color, #ffffff)',
                           border: '1px solid var(--border-color)',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           color: 'var(--text-primary)',
                           padding: '10px 12px',
                           fontSize: '0.88rem',
                           outline: 'none',
-                          width: '100%'
+                          width: '100%',
+                          transition: 'all 0.25s ease'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = 'var(--primary)';
+                          e.target.style.background = '#ffffff';
+                          e.target.style.boxShadow = '0 0 0 2px var(--primary-glow)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = 'var(--border-color)';
+                          e.target.style.background = 'var(--bg-color, #ffffff)';
+                          e.target.style.boxShadow = 'none';
                         }}
                       />
                     </div>
@@ -3686,7 +4551,7 @@ function App() {
                     <div style={{ background: 'var(--primary-glow)', color: 'var(--primary)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>3</div>
                     <div>
                       <span style={{ fontSize: '0.85rem', fontWeight: 650, display: 'block', color: 'var(--text-primary)' }}>Itinerary Activated Instantly</span>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>MongoDB is seeded, the AI compiles a weather-aware flyer, and prints their welcome QR code!</span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Amazon DynamoDB tables are seeded, the AI compiles a weather-aware flyer, and prints their welcome QR code!</span>
                     </div>
                   </div>
                 </div>
@@ -3858,7 +4723,7 @@ function App() {
                     Register New Local Excursion
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Create custom premium activities, eco-tours, or wellness experiences for your resort and sync them live to MongoDB.
+                    Create custom premium activities, eco-tours, or wellness experiences for your resort and sync them live to Amazon DynamoDB.
                   </p>
                 </div>
 
@@ -4034,24 +4899,26 @@ function App() {
                   </div>
 
                   {/* Submit Button */}
-                  <button 
-                    type="submit" 
-                    className="btn-primary"
-                    disabled={loading}
-                    style={{ padding: '12px', fontSize: '0.9rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center', marginTop: '4px' }}
-                  >
-                    {loading ? (
-                      <span className="spinner"></span>
-                    ) : (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Publish Excursion to MongoDB
-                      </>
-                    )}
-                  </button>
+                  <Magnet style={{ width: '100%', display: 'block' }} strength={12} padding={25}>
+                    <button 
+                      type="submit" 
+                      className="btn-primary"
+                      disabled={loading}
+                      style={{ padding: '12px', fontSize: '0.9rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px', justifyContent: 'center', width: '100%' }}
+                    >
+                      {loading ? (
+                        <span className="spinner"></span>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                          Publish Excursion to Amazon DynamoDB
+                        </>
+                      )}
+                    </button>
+                  </Magnet>
 
                 </form>
               </div>
@@ -4154,7 +5021,7 @@ function App() {
                 </div>
                 
                 {/* Segment Controls */}
-                <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.2)', padding: '4px', borderRadius: '30px', border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', background: 'var(--bg-card-nested, rgba(0, 0, 0, 0.03))', padding: '4px', borderRadius: '30px', border: '1px solid var(--border-color)' }}>
                   <button 
                     onClick={() => setMessagingSubTab('guest')}
                     style={{
@@ -4208,28 +5075,59 @@ function App() {
                     {/* Guest Selection */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>Select Onboarded Guest</label>
-                      <select 
-                        value={messagingGuestId}
-                        onChange={(e) => setMessagingGuestId(e.target.value)}
-                        style={{
-                          background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: '6px',
-                          color: 'var(--text-primary)',
-                          padding: '10px 12px',
-                          fontSize: '0.85rem',
-                          outline: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {(guests || []).map(g => g && (
-                          <option key={g._id} value={g._id}>{g.name} ({g.hotel_name || 'La Coralina'})</option>
-                        ))}
-                      </select>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <select 
+                          value={messagingGuestId}
+                          onChange={(e) => setMessagingGuestId(e.target.value)}
+                          style={{
+                            background: 'var(--bg-color, #ffffff)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '6px',
+                            color: 'var(--text-primary)',
+                            padding: '10px 12px',
+                            fontSize: '0.85rem',
+                            outline: 'none',
+                            colorScheme: 'light',
+                            cursor: 'pointer',
+                            flex: 1
+                          }}
+                        >
+                          {(guests || []).map(g => g && (
+                            <option key={g._id} value={g._id}>{g.name} ({g.hotel_name || 'La Coralina'})</option>
+                          ))}
+                        </select>
+                        {!['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'].includes(messagingGuestId) && (
+                          <button
+                            onClick={(e) => handleDeleteGuest(messagingGuestId, e)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#f87171',
+                              borderRadius: '6px',
+                              padding: '10px 16px',
+                              fontSize: '0.85rem',
+                              fontWeight: '600',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              height: '40px'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Dynamic Modules Toggle */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(0, 0, 0, 0.15)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'var(--bg-card-nested, rgba(0, 0, 0, 0.03))', padding: '16px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                         Smart Copy Modules
                       </span>
@@ -4448,7 +5346,13 @@ function App() {
                               maxWidth: '90%',
                               lineHeight: '1.3'
                             }}>
-                              🔐 Messages are fully synchronized live with MongoDB, secure token pre-authenticated.
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ffe69c' }}>
+                                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                Messages are fully synchronized live with Amazon DynamoDB, secure token pre-authenticated.
+                              </span>
                             </div>
 
                             {/* Guest Message bubble */}
@@ -4618,111 +5522,6 @@ function App() {
 
                   </div>
 
-                  {/* Live Captain Notifications & Change-Logs */}
-                  <div className="glass-card" style={{
-                    padding: '24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                    background: 'rgba(5, 5, 7, 0.45)',
-                    border: '1px solid rgba(168, 255, 53, 0.15)',
-                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 16px rgba(168, 255, 53, 0.05)',
-                    borderRadius: '16px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    {/* Ambient glowing background element */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '-50px',
-                      right: '-50px',
-                      width: '120px',
-                      height: '120px',
-                      background: 'radial-gradient(circle, rgba(168, 255, 53, 0.12) 0%, rgba(168, 255, 53, 0) 70%)',
-                      borderRadius: '50%',
-                      pointerEvents: 'none'
-                    }} />
-
-                    <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          background: 'rgba(168, 255, 53, 0.1)',
-                          border: '1px solid rgba(168, 255, 53, 0.4)',
-                          color: '#a8ff35'
-                        }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                            <path d="M2 8c0-2.2.9-4.2 2.3-5.7" />
-                            <path d="M22 8c0-2.2-.9-4.2-2.3-5.7" />
-                          </svg>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#a8ff35', textShadow: '0 0 8px rgba(168,255,53,0.3)' }}>
-                            Real-Time Captain Dispatch Notifications
-                          </h4>
-                          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-                            Instant warnings and rescheduling updates transmitted to vessel captains.
-                          </p>
-                        </div>
-                      </div>
-                      <span style={{ fontSize: '0.62rem', background: 'rgba(168, 255, 53, 0.1)', color: '#a8ff35', border: '1px solid rgba(168, 255, 53, 0.3)', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold' }}>
-                        LIVE BROADCAST
-                      </span>
-                    </div>
-
-                    {captainNotifications.length === 0 ? (
-                      <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', background: 'rgba(255,255,255,0.01)', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                        📡 No schedule updates or dispatch change logs triggered yet. Captain dispatches are running in normal weather configurations.
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto', paddingRight: '4px' }}>
-                        {captainNotifications.map((notif, index) => (
-                          <div key={notif._id || index} style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '6px',
-                            padding: '12px 16px',
-                            background: notif.type === 'cancellation' ? 'rgba(239, 68, 68, 0.05)' : 'rgba(245, 158, 11, 0.05)',
-                            border: `1px solid ${notif.type === 'cancellation' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'}`,
-                            borderRadius: '10px',
-                            transition: 'all 0.3s ease',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                          }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{
-                                  fontSize: '0.65rem',
-                                  fontWeight: 'bold',
-                                  textTransform: 'uppercase',
-                                  padding: '2px 6px',
-                                  borderRadius: '4px',
-                                  background: notif.type === 'cancellation' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                                  color: notif.type === 'cancellation' ? '#ef4444' : '#f59e0b'
-                                }}>
-                                  {notif.type}
-                                </span>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                                  🚤 {notif.captain} ({notif.vessel})
-                                </span>
-                              </div>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{notif.timestamp}</span>
-                            </div>
-                            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.35' }}>
-                              {notif.message}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
                   {/* Active Booking Dispatch Ledger Card */}
                   <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -4740,8 +5539,13 @@ function App() {
                     </div>
 
                     {getDispatchItems().length === 0 ? (
-                      <div style={{ padding: '40px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                        🏖️ No active dispatches required. All itineraries are empty or no guests are currently onboarded.
+                      <div style={{ padding: '40px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-dim)' }}>
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        No active dispatches required. All itineraries are empty or no guests are currently onboarded.
                       </div>
                     ) : (
                       <div style={{ overflowX: 'auto' }}>
@@ -4938,7 +5742,7 @@ function App() {
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--primary)' }}>Itinerary Updated!</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '280px', margin: 0 }}>
-                Your activities have been successfully updated in MongoDB. Scan the QR code below to save your new itinerary directly onto your phone!
+                Your activities have been successfully updated in Amazon DynamoDB. Scan the QR code below to save your new itinerary directly onto your phone!
               </p>
               
               {/* QR Code Container */}
@@ -5035,6 +5839,12 @@ function App() {
             </button>
           </div>
         </div>
+      )}
+
+      {view === 'captain' && (
+        <ErrorBoundary onReset={() => setView('landing')}>
+          <CaptainPortal captainId={captainId} logistics={logistics} lang={lang} setLang={setLang} onBackToLanding={() => setView('landing')} />
+        </ErrorBoundary>
       )}
     </div>
   );
