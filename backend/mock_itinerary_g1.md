@@ -1,19 +1,19 @@
 # Bocas del Toro Concierge Itinerary
 **Resort Stay:** Nayara Bocas del Toro
 **Guest:** Alex Mercer | **Contact:** +507-6111-2222
-**Stay Period:** 2026-06-26 to 2026-06-30
+**Stay Period:** 2026-07-15 to 2026-07-19
 **Preferences:** wildlife, adventure
 **Status:** ACTIVE
 ---
 
-### 📅 2026-06-27 - Morning
+### 📅 2026-07-16 - Morning
 **Activity:** Cayos Zapatilla Reef Snorkeling
 **Location:** Bastimentos National Marine Park
 **Price:** $45.0
 **Status:** CONFIRMED
 **Description:** Board a local panga boat to Cayos Zapatilla. Snorkel crystal-clear reefs, spot marine turtles, and walk white-sand beaches. Perfect for wildlife lovers.
 
-### 📅 2026-06-28 - Afternoon
+### 📅 2026-07-17 - Afternoon
 **Activity:** Bastimentos Canopy Zip Line
 **Location:** Red Frog Beach Canopy
 **Price:** $65.0

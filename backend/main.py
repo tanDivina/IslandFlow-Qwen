@@ -413,11 +413,11 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
             else:
                 raise HTTPException(status_code=401, detail="Invalid or expired secure token")
 
-        # Auto-refresh database if dates are in the past relative to today
+        # Auto-refresh database if empty or if dates are in the past relative to today
         today_str = datetime.date.today().strftime("%Y-%m-%d")
         first_logistic = db["logistics"].find_one({}, sort=[("date", 1)])
-        if first_logistic and first_logistic.get("date", "") < today_str:
-            logger.info("Seeded dates are in the past. Automatically resetting database to current dates...")
+        if not first_logistic or first_logistic.get("date", "") < today_str:
+            logger.info("Seeded dates are in the past or database is empty. Automatically resetting database to current dates...")
             db["tours"].delete_many({})
             db["guests"].delete_many({})
             db["bookings"].delete_many({})

@@ -494,7 +494,7 @@ function App() {
       
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(data.message || "Custom excursion successfully added to DynamoDB!");
+        alert(data.message || "Custom excursion successfully added to MongoDB Atlas!");
         setCustomTourName('');
         setCustomTourDesc('');
         setCustomTourPrice('50.0');
@@ -901,7 +901,7 @@ function App() {
         addLog(`✅ Booking updated and slots shifted successfully!`);
         setMessages((prev) => [...prev, { 
           role: 'model', 
-          text: "Respect, my friend! I have processed the change in DynamoDB, updated your booking slots, and generated your new official travel receipt below. Pura vida! 🌴" 
+          text: "Respect, my friend! I have processed the change in MongoDB Atlas, updated your booking slots, and generated your new official travel receipt below. Pura vida! 🌴" 
         }]);
         setShowItineraryModal(true);
       } else {
@@ -1548,7 +1548,7 @@ function App() {
                   borderRadius: '50%',
                   background: isRealMongo ? '#10b981' : 'var(--primary)'
                 }}></span>
-                {isRealMongo ? 'AWS DYNAMODB LIVE' : 'LOCAL SANDBOX DB'}
+                {isRealMongo ? 'MONGODB ATLAS LIVE' : 'LOCAL SANDBOX DB'}
               </span>
               <button 
                 onClick={() => {
@@ -1772,7 +1772,7 @@ function App() {
           <div className="landing-hero">
             <h2 className="landing-tagline">Eco-Tourism Coordinator for Bocas del Toro</h2>
             <p className="landing-intro">
-              Moving beyond basic text chat. A dedicated local travel agent that actively manages schedules, monitors live weather conditions, automatically proposes indoor reschedules during storms, and commits verified transactions directly to Amazon DynamoDB.
+              Moving beyond basic text chat. A dedicated local travel agent that actively manages schedules, monitors live weather conditions, automatically proposes indoor reschedules during storms, and commits verified transactions directly to MongoDB Atlas.
             </p>
           </div>
 
@@ -2025,9 +2025,9 @@ function App() {
                       <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
                     </svg>
                   </div>
-                  <div className="feature-title">Live Amazon DynamoDB Transactions</div>
+                  <div className="feature-title">Live MongoDB Atlas Transactions</div>
                 </div>
-                <div className="feature-desc">Transactions are safely committed back to Amazon DynamoDB, accurately adjusting available slots and creating official itinerary receipts.</div>
+                <div className="feature-desc">Transactions are safely committed back to MongoDB Atlas, accurately adjusting available slots and creating official itinerary receipts.</div>
               </div>
             </div>
           </div>
@@ -2184,7 +2184,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Layer Card 5: Amazon DynamoDB Persistence Layer */}
+                {/* Layer Card 5: MongoDB Atlas Persistence Layer */}
                 <div 
                   className="glass-card" 
                   onClick={() => setArchActiveLayer('database')}
@@ -2207,8 +2207,8 @@ function App() {
                         </svg>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>5. Amazon DynamoDB Persistence Layer</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>DynamoDB Tables & Stay State Engine</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>5. MongoDB Atlas Persistence Layer</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>MongoDB Collections & Stay State Engine</div>
                       </div>
                     </div>
                     <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '10px', background: 'rgba(5, 150, 105, 0.1)', color: '#10b981' }}>
@@ -2253,18 +2253,18 @@ function App() {
                       Platform Integration Blueprint
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', margin: 0 }}>
-                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Google's ADK, and Amazon DynamoDB.
+                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Google's ADK, and MongoDB Atlas.
                     </p>
                     <div style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '14px', background: 'rgba(255,255,255,0.01)', borderRadius: '0 8px 8px 0', padding: '10px 14px' }}>
                       <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '4px' }}>How data moves during weather shifts (Automated):</div>
                       <ol style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <li>OpenWeatherMap API or an IoT reef sensor transmits a live weather/swell alert (simulated in the Operator console for testing).</li>
-                        <li>FastAPI receives the weather/swell shift and automatically commits it to Amazon DynamoDB.</li>
+                        <li>FastAPI receives the weather/swell shift and automatically commits it to MongoDB Atlas.</li>
                         <li>The backend triggers an automated background check through the Google ADK model.</li>
                         <li>Gemini uses `check_weather` and `get_bookings` to scan for outdoor conflicts.</li>
                         <li>Finding a slot conflict, Gemini queries `get_tours` for indoor options.</li>
                         <li>Gemini creates a rescheduling swap payload, rendering a card in the chat.</li>
-                        <li>The guest approves the swap, triggering a live write back to Amazon DynamoDB.</li>
+                        <li>The guest approves the swap, triggering a live write back to MongoDB Atlas.</li>
                       </ol>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -2278,7 +2278,7 @@ function App() {
                       </div>
                       <div style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Partner Database</div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Amazon DynamoDB</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>MongoDB Atlas</div>
                       </div>
                     </div>
                   </>
@@ -2323,7 +2323,7 @@ function App() {
                       FastAPI SaaS Routing Gateway
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      Connects client web layers with Amazon DynamoDB data layers and our ADK reasoning loops.
+                      Connects client web layers with MongoDB Atlas data layers and our ADK reasoning loops.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem', marginTop: '4px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
@@ -2451,7 +2451,7 @@ function App() {
                         {selectedToolId === 'get_tours' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>guest_id: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Fetches all available resort excursions from Amazon DynamoDB, filtering out expired dates and tours that the specific guest has already completed.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Fetches all available resort excursions from MongoDB Atlas, filtering out expired dates and tours that the specific guest has already completed.</div>
                           </>
                         )}
                         {selectedToolId === 'get_bookings' && (
@@ -2469,7 +2469,7 @@ function App() {
                         {selectedToolId === 'add_booking' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>guest_id: str, tour_id: str, date: str, slot: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Adds a new excursion item into DynamoDB, reducing the excursion capacity securely.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Adds a new excursion item into MongoDB Atlas, reducing the excursion capacity securely.</div>
                           </>
                         )}
                         {selectedToolId === 'reschedule_booking' && (
@@ -2481,7 +2481,7 @@ function App() {
                         {selectedToolId === 'cancel_booking' && (
                           <>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Parameters:</strong> <code>booking_id: str</code></div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Removes the target booking document from DynamoDB, releases the reserved spot, and fires cancellation tasks to local captains and operators.</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}><strong style={{ color: 'var(--text-primary)' }}>Business Logic:</strong> Removes the target booking document from MongoDB Atlas, releases the reserved spot, and fires cancellation tasks to local captains and operators.</div>
                           </>
                         )}
                         {selectedToolId === 'update_guest_profile' && (
@@ -2507,7 +2507,7 @@ function App() {
                   </>
                 )}
 
-                {/* 6. Amazon DynamoDB View */}
+                {/* 6. MongoDB Atlas View */}
                 {archActiveLayer === 'database' && (
                   <>
                     <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2516,10 +2516,10 @@ function App() {
                         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
                         <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
                       </svg>
-                      Amazon DynamoDB Persistence Layer
+                      MongoDB Atlas Persistence Layer
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      A DynamoDB-backed persistent structure tracking resort resources, itineraries, and tenant color presets.
+                      A MongoDB Atlas persistent structure tracking resort resources, itineraries, and tenant color presets.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem', marginTop: '4px' }}>
                       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '8px 12px', borderRadius: '6px' }}>
@@ -3275,7 +3275,7 @@ function App() {
               />
             </div>
 
-            {/* SaaS B2B Product Analytics & AWS Telemetry KPI Dashboard */}
+            {/* SaaS B2B Product Analytics & MongoDB Telemetry KPI Dashboard */}
             <div className="glass-card fade-in-entry stagger-7" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
@@ -3348,7 +3348,7 @@ function App() {
                   gap: '6px'
                 }}>
                   <div style={{ color: '#a7f3d0' }}>
-                    <span style={{ color: 'var(--text-dim)' }}>[Telemetry]</span> Database connection established (AWS DynamoDB)
+                    <span style={{ color: 'var(--text-dim)' }}>[Telemetry]</span> Database connection established (MongoDB Atlas)
                   </div>
                   {itineraryMarkdown && (
                     <div style={{ color: '#e0f2fe' }}>
@@ -3371,7 +3371,7 @@ function App() {
                 color: 'var(--text-muted)', 
                 lineHeight: '1.4'
               }}>
-                <div style={{ fontWeight: 600, color: 'var(--primary)', marginBottom: '2px' }}>AWS DynamoDB Data Strategy:</div>
+                <div style={{ fontWeight: 600, color: 'var(--primary)', marginBottom: '2px' }}>MongoDB Atlas Data Strategy:</div>
                 Each resort tenant represents a partitioned key-space. Guests and hotel staff represent unique user session contexts. This enables deep SaaS product analyses, mapping workflow efficiency directly to guest satisfaction and hotel operational retention KPIs.
               </div>
             </div>
@@ -3610,7 +3610,7 @@ function App() {
                     Manual Guest Check-In Form
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your Amazon DynamoDB cluster.
+                    For local overwater lodges, boutique stays, and tour operators with manual reservation books. Register check-ins live into your MongoDB Atlas Cluster.
                   </p>
                 </div>
 
@@ -4430,7 +4430,7 @@ function App() {
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
-                      <span><strong>Upon submission:</strong> This guest will be recorded in Amazon DynamoDB, a secure magic-link QR will generate, and you can instantly launch their 100% isolated private companion portal or simulate them here.</span>
+                      <span><strong>Upon submission:</strong> This guest will be recorded in MongoDB Atlas, a secure magic-link QR will generate, and you can instantly launch their 100% isolated private companion portal or simulate them here.</span>
                     </div>
                   </div>
                 )}
@@ -4551,7 +4551,7 @@ function App() {
                     <div style={{ background: 'var(--primary-glow)', color: 'var(--primary)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>3</div>
                     <div>
                       <span style={{ fontSize: '0.85rem', fontWeight: 650, display: 'block', color: 'var(--text-primary)' }}>Itinerary Activated Instantly</span>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Amazon DynamoDB tables are seeded, the AI compiles a weather-aware flyer, and prints their welcome QR code!</span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>MongoDB Atlas collections are seeded, the AI compiles a weather-aware flyer, and prints their welcome QR code!</span>
                     </div>
                   </div>
                 </div>
@@ -4723,7 +4723,7 @@ function App() {
                     Register New Local Excursion
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Create custom premium activities, eco-tours, or wellness experiences for your resort and sync them live to Amazon DynamoDB.
+                    Create custom premium activities, eco-tours, or wellness experiences for your resort and sync them live to MongoDB Atlas.
                   </p>
                 </div>
 
@@ -4914,7 +4914,7 @@ function App() {
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                           </svg>
-                          Publish Excursion to Amazon DynamoDB
+                          Publish Excursion to MongoDB Atlas
                         </>
                       )}
                     </button>
@@ -5351,7 +5351,7 @@ function App() {
                                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                 </svg>
-                                Messages are fully synchronized live with Amazon DynamoDB, secure token pre-authenticated.
+                                Messages are fully synchronized live with MongoDB Atlas, secure token pre-authenticated.
                               </span>
                             </div>
 
@@ -5742,7 +5742,7 @@ function App() {
               </div>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: 'var(--primary)' }}>Itinerary Updated!</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '280px', margin: 0 }}>
-                Your activities have been successfully updated in Amazon DynamoDB. Scan the QR code below to save your new itinerary directly onto your phone!
+                Your activities have been successfully updated in MongoDB Atlas. Scan the QR code below to save your new itinerary directly onto your phone!
               </p>
               
               {/* QR Code Container */}
