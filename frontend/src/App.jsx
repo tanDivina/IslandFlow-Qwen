@@ -1945,7 +1945,7 @@ function App() {
                 </p>
                 <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
                   <span style={{ color: '#a855f7', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  View active schedule, chat instantly with our Google ADK concierge, request tour booking extensions, and add custom timeline markers offline.
+                  View active schedule, chat instantly with our Qwen concierge, request tour booking extensions, and add custom timeline markers offline.
                 </div>
               </div>
 
@@ -1967,7 +1967,7 @@ function App() {
                 </p>
                 <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
                   <span style={{ color: 'var(--warning, #f59e0b)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  Captains flag unsafe seas (in Spanish) &rarr; Front desk monitors live alerts &rarr; Gemini backend drafts reschedules &rarr; Guest confirms swap in 1-tap.
+                  Captains flag unsafe seas (in Spanish) &rarr; Front desk monitors live alerts &rarr; Qwen backend drafts reschedules &rarr; Guest confirms swap in 1-tap.
                 </div>
               </div>
             </div>
@@ -2120,7 +2120,7 @@ function App() {
                   </div>
                 </div>
 
-                {/* Layer Card 3: Google ADK Agent Core */}
+                {/* Layer Card 3: Qwen Agent Core */}
                 <div 
                   className="glass-card" 
                   onClick={() => setArchActiveLayer('brain')}
@@ -2141,12 +2141,12 @@ function App() {
                         </svg>
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>3. Google ADK Agent Core</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>BocasEcoConcierge / Gemini Orchestrator</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>3. Qwen Agent Core</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>BocasEcoConcierge / Qwen Orchestrator</div>
                       </div>
                     </div>
                     <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '3px 8px', borderRadius: '10px', background: 'rgba(13, 148, 136, 0.1)', color: '#14b8a6' }}>
-                      GOOGLE ADK
+                      QWEN CLOUD
                     </span>
                   </div>
                 </div>
@@ -2253,17 +2253,17 @@ function App() {
                       Platform Integration Blueprint
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6', margin: 0 }}>
-                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Google's ADK, and MongoDB Atlas.
+                      IslandFlow shifts AI travel coordinators out of plain conversation models into an active, contextual stay manager. It binds React portals, FastAPI, Qwen Cloud Orchestration, and MongoDB Atlas.
                     </p>
                     <div style={{ borderLeft: '3px solid var(--primary)', paddingLeft: '14px', background: 'rgba(255,255,255,0.01)', borderRadius: '0 8px 8px 0', padding: '10px 14px' }}>
                       <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '4px' }}>How data moves during weather shifts (Automated):</div>
                       <ol style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <li>OpenWeatherMap API or an IoT reef sensor transmits a live weather/swell alert (simulated in the Operator console for testing).</li>
                         <li>FastAPI receives the weather/swell shift and automatically commits it to MongoDB Atlas.</li>
-                        <li>The backend triggers an automated background check through the Google ADK model.</li>
-                        <li>Gemini uses `check_weather` and `get_bookings` to scan for outdoor conflicts.</li>
-                        <li>Finding a slot conflict, Gemini queries `get_tours` for indoor options.</li>
-                        <li>Gemini creates a rescheduling swap payload, rendering a card in the chat.</li>
+                        <li>The backend triggers an automated background check through the Qwen model.</li>
+                        <li>Qwen uses `check_weather` and `get_bookings` to scan for outdoor conflicts.</li>
+                        <li>Finding a slot conflict, Qwen queries `get_tours` for indoor options.</li>
+                        <li>Qwen creates a rescheduling swap payload, rendering a card in the chat.</li>
                         <li>The guest approves the swap, triggering a live write back to MongoDB Atlas.</li>
                       </ol>
                     </div>
@@ -2274,7 +2274,7 @@ function App() {
                       </div>
                       <div style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Orchestration</div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Google Cloud ADK</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Qwen Cloud SDK</div>
                       </div>
                       <div style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Partner Database</div>
@@ -2323,7 +2323,7 @@ function App() {
                       FastAPI SaaS Routing Gateway
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      Connects client web layers with MongoDB Atlas data layers and our ADK reasoning loops.
+                      Connects client web layers with MongoDB Atlas data layers and our Qwen reasoning loops.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.75rem', marginTop: '4px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
@@ -2334,7 +2334,7 @@ function App() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                         <span style={{ fontWeight: 700, color: '#6366f1', fontFamily: 'monospace', width: '32px' }}>POST</span>
                         <code style={{ color: 'var(--text-primary)', fontWeight: 600 }}>/api/chat</code>
-                        <span style={{ color: 'var(--text-muted)', marginLeft: 'auto' }}>Injects context and runs the Gemini ADK loop</span>
+                        <span style={{ color: 'var(--text-muted)', marginLeft: 'auto' }}>Injects context and runs the Qwen agent loop</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
                         <span style={{ fontWeight: 700, color: '#6366f1', fontFamily: 'monospace', width: '32px' }}>POST</span>
@@ -2355,7 +2355,7 @@ function App() {
                   </>
                 )}
 
-                {/* 4. Google ADK Agent Core View */}
+                {/* 4. Qwen Agent Core View */}
                 {archActiveLayer === 'brain' && (
                   <>
                     <h4 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2371,14 +2371,14 @@ function App() {
                         <line x1="1" y1="9" x2="4" y2="9" />
                         <line x1="1" y1="15" x2="4" y2="15" />
                       </svg>
-                      Google Cloud Agent Development Kit (ADK) Core
+                      Qwen Cloud Agent Orchestrator Core
                     </h4>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      IslandFlow runs natively on the Google ADK ecosystem, removing any reliance on competitive third-party orchestrators.
+                      IslandFlow runs natively on the Qwen Cloud ecosystem, leveraging state-of-the-art qwen3.7-plus intelligence.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.8rem', marginTop: '4px' }}>
                       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: '8px' }}>
-                        <strong style={{ color: 'var(--text-primary)' }}>Native ADK Runner Architecture:</strong> Managed by `BocasEcoConciergeAgent` inside `agent.py`. It coordinates logical threads, reads and writes active user memory state, and interfaces directly with Gemini models.
+                        <strong style={{ color: 'var(--text-primary)' }}>Native Qwen Runner Architecture:</strong> Managed by `BocasEcoConciergeAgent` inside `agent.py`. It coordinates logical threads, reads and writes active user memory state, and interfaces directly with Qwen models.
                       </div>
                       <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: '8px' }}>
                         <strong style={{ color: 'var(--text-primary)' }}>In-Memory Session Isolation:</strong> Integrates custom memory stores mapped per unique guest ID, preventing data leakage across active rooms.
@@ -4444,7 +4444,7 @@ function App() {
                     AI Brand Extractor
                   </h4>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                    Onboard any custom hotel or resort instantly. Type their website URL below, and Gemini 3.1 Flash-Lite will extract their brand name, premium color palettes, custom typography, and elite greetings.
+                    Onboard any custom hotel or resort instantly. Type their website URL below, and Qwen3.7-Plus will extract their brand name, premium color palettes, custom typography, and elite greetings.
                   </p>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -4500,7 +4500,7 @@ function App() {
                             <polyline points="2 17 12 22 22 17" />
                             <polyline points="2 12 12 17 22 12" />
                           </svg>
-                          Extract Brand with Gemini
+                          Extract Brand with Qwen
                         </>
                       )}
                     </button>

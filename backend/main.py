@@ -510,7 +510,7 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
 
 @app.post("/api/chat")
 async def chat_with_concierge(payload: ChatPayload):
-    """Chat endpoint to communicate with the Gemini Concierge Agent."""
+    """Chat endpoint to communicate with the Qwen Concierge Agent."""
     guest_id = payload.guest_id
     try:
         # Reformat history if necessary
@@ -1212,34 +1212,77 @@ async def extract_brand_endpoint(payload: BrandExtractPayload):
             f"a complete bespoke premium dark-mode hospitality design system for this tenant."
         )
 
+    provider = os.getenv("LLM_PROVIDER", "qwen").lower()
+    system_instruction = (
+        "You are an elite luxury hospitality brand manager and senior UI design system architect.\n"
+        "Your job is to generate a beautifully coordinated brand color, typography, and messaging system.\n"
+        "RULES:\n"
+        "1. name: Determine the elegant brand name (e.g. 'Faro Blanco' or 'The Ritz-Carlton, Maui').\n"
+        "2. primary_color: Pick a vibrant, highly elegant brand primary color in HSL format, e.g. 'hsl(215, 80%, 60%)'. "
+        "Avoid dark/light backgrounds or dull colors; pick a primary color that will pop beautifully as buttons, selections, and glowing borders on a dark-mode obsidian dashboard.\n"
+        "3. primary_glow: Generate a matching semi-transparent RGBA glow with 0.12 opacity, e.g. 'rgba(34, 150, 240, 0.12)'.\n"
+        "4. font: Select a premium Google Font family name stack (e.g. 'Outfit, Poppins, sans-serif' or 'Playfair Display, Georgia, serif' or 'Montserrat, Inter, sans-serif').\n"
+        "5. welcome_message: Create a warm, bespoke, luxury 1-sentence welcome message incorporating local elements, but DO NOT start it with cliches like 'respect' or 'my friend'. Keep it unique.\n"
+        f"6. logo_url: Locate and provide the brand's actual logo or real favicon image URL if found in metadata, icons, or page content. If no authentic brand logo or high-quality favicon is found on the website, return null or an empty string. Absolutely do NOT construct invented or fallback/generic logos using Clearbit, Google favicon, or other third-party domain logo APIs."
+    )
+
     try:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set on the server")
+        if provider == "qwen":
+            qwen_key = os.getenv("DASHSCOPE_API_KEY") or os.getenv("OPENAI_API_KEY")
+            if not qwen_key:
+                raise HTTPException(status_code=500, detail="DASHSCOPE_API_KEY or OPENAI_API_KEY is not set on the server")
             
-        client = genai.Client()
-        response = client.models.generate_content(
-            model='gemini-3.1-flash-lite',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=TenantBrandExtraction,
-                system_instruction=(
-                    "You are an elite luxury hospitality brand manager and senior UI design system architect.\n"
-                    "Your job is to generate a beautifully coordinated brand color, typography, and messaging system.\n"
-                    "RULES:\n"
-                    "1. name: Determine the elegant brand name (e.g. 'Faro Blanco' or 'The Ritz-Carlton, Maui').\n"
-                    "2. primary_color: Pick a vibrant, highly elegant brand primary color in HSL format, e.g. 'hsl(215, 80%, 60%)'. "
-                    "Avoid dark/light backgrounds or dull colors; pick a primary color that will pop beautifully as buttons, selections, and glowing borders on a dark-mode obsidian dashboard.\n"
-                    "3. primary_glow: Generate a matching semi-transparent RGBA glow with 0.12 opacity, e.g. 'rgba(34, 150, 240, 0.12)'.\n"
-                    "4. font: Select a premium Google Font family name stack (e.g. 'Outfit, Poppins, sans-serif' or 'Playfair Display, Georgia, serif' or 'Montserrat, Inter, sans-serif').\n"
-                    "5. welcome_message: Create a warm, bespoke, luxury 1-sentence welcome message incorporating local elements, but DO NOT start it with cliches like 'respect' or 'my friend'. Keep it unique.\n"
-                    f"6. logo_url: Locate and provide the brand's actual logo or real favicon image URL if found in metadata, icons, or page content. If no authentic brand logo or high-quality favicon is found on the website, return null or an empty string. Absolutely do NOT construct invented or fallback/generic logos using Clearbit, Google favicon, or other third-party domain logo APIs."
-                )
-            ),
-        )
-        
-        extracted_data = json.loads(response.text)
+            api_base = os.getenv("OPENAI_API_BASE", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
+            model_name = os.getenv("QWEN_MODEL", "qwen3.7-plus")
+            
+            headers = {
+                "Authorization": f"Bearer {qwen_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload_data = {
+                "model": model_name,
+                "response_format": {"type": "json_object"},
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            f"{system_instruction}\n"
+                            "You must respond with a JSON object containing keys: 'name', 'primary_color', 'primary_glow', 'font', 'welcome_message', 'logo_url'."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            }
+            
+            response = requests.post(f"{api_base}/chat/completions", headers=headers, json=payload_data, timeout=30)
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail=f"Qwen API returned error: {response.text}")
+                
+            res_json = response.json()
+            choice = res_json.get("choices", [{}])[0]
+            message = choice.get("message", {})
+            response_text = message.get("content") or "{}"
+            extracted_data = json.loads(response_text)
+        else:
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if not api_key:
+                raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set on the server")
+                
+            client = genai.Client()
+            response = client.models.generate_content(
+                model='gemini-3.1-flash-lite',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=TenantBrandExtraction,
+                    system_instruction=system_instruction
+                ),
+            )
+            extracted_data = json.loads(response.text)
         
         # Save or update in database
         tenant_doc = {

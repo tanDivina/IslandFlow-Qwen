@@ -355,7 +355,7 @@ export default function ControlPanel({
             color: 'var(--text-muted)',
             lineHeight: '1.4'
           }}>
-            💡 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Autonomic Action</span>: A background cron worker automatically executes a telemetry poll check every 10 minutes. If rain warning codes or waves &gt; 1.5m are flagged on stay dates, Gemini launches instant rescheduling swap cards.
+            💡 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Autonomic Action</span>: A background cron worker automatically executes a telemetry poll check every 10 minutes. If rain warning codes or waves &gt; 1.5m are flagged on stay dates, Qwen launches instant rescheduling swap cards.
           </div>
           
           <button 
