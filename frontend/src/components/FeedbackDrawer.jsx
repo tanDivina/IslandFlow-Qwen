@@ -136,12 +136,37 @@ export default function FeedbackDrawer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100000,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        pointerEvents: 'none',
+        fontFamily: 'var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, sans-serif)'
+      }}
+    >
       {/* Backdrop overlay */}
       <div 
-        className="absolute inset-0 bg-black/35 backdrop-blur-sm transition-opacity duration-300"
         onClick={onClose}
-        style={{ zIndex: 1 }}
+        style={{ 
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 1,
+          pointerEvents: 'auto',
+          cursor: 'pointer',
+          transition: 'opacity 0.3s ease'
+        }}
       />
 
       {/* Drawer Panel */}
@@ -150,45 +175,105 @@ export default function FeedbackDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-title"
-        className="relative w-full max-w-md h-full shadow-2xl flex flex-col overflow-hidden"
         style={{ 
+          position: 'relative',
+          width: '100%',
+          maxWidth: '440px',
+          height: '100%',
+          boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.12)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
           background: 'var(--panel-bg)', 
           borderLeft: '1px solid var(--border-color)', 
           backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           zIndex: 2,
-          color: 'var(--text-primary)'
+          color: 'var(--text-primary)',
+          pointerEvents: 'auto',
+          boxSizing: 'border-box'
         }}
       >
         {/* Subtle radial ambient background glow (champagne or ocean teal) */}
         <div 
-          className="absolute top-0 right-0 w-80 h-80 rounded-full filter blur-[80px] pointer-events-none -mr-40 -mt-20 opacity-[0.06]" 
-          style={{ backgroundColor: 'var(--primary)' }}
+          style={{ 
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '320px',
+            height: '320px',
+            borderRadius: '50%',
+            filter: 'blur(80px)',
+            WebkitFilter: 'blur(80px)',
+            pointerEvents: 'none',
+            marginRight: '-160px',
+            marginTop: '-80px',
+            opacity: 0.08,
+            backgroundColor: 'var(--primary)',
+            zIndex: 1
+          }}
         />
 
         {/* Header */}
-        <div className="px-6 py-5 border-b border-color flex items-center justify-between relative" style={{ borderColor: 'var(--border-color)', background: 'var(--primary-glow)' }}>
-          <div>
-            <h2 id="feedback-title" className="text-lg font-bold tracking-tight" style={{ color: 'var(--primary)', fontFamily: 'var(--font-sans)' }}>
+        <div 
+          style={{ 
+            borderBottom: '1px solid var(--border-color)',
+            background: 'var(--primary-glow)',
+            padding: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'relative',
+            zIndex: 2,
+            boxSizing: 'border-box',
+            width: '100%'
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+            <h2 
+              id="feedback-title" 
+              style={{ 
+                margin: 0, 
+                fontSize: '1.25rem', 
+                fontWeight: 700, 
+                color: 'var(--primary)', 
+                fontFamily: 'var(--font-sans)',
+                letterSpacing: '-0.02em',
+                lineHeight: 1.2
+              }}
+            >
               Share Your Feedback
             </h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               We'd love to hear about your {appName} experience!
             </p>
           </div>
           <button 
             onClick={onClose}
             aria-label="Close feedback panel"
-            className="p-1.5 rounded-lg text-muted hover-bg-primary transition-all duration-200"
             style={{ 
               background: 'transparent', 
               border: 'none', 
               cursor: 'pointer',
-              color: 'var(--text-muted)'
+              color: 'var(--text-muted)',
+              padding: '8px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              marginLeft: '12px'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'var(--primary)';
+              e.currentTarget.style.background = 'var(--primary-glow)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.background = 'transparent';
+            }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -196,13 +281,24 @@ export default function FeedbackDrawer({
         </div>
 
         {/* Content Container */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 relative" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div 
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            padding: '24px', 
+            position: 'relative', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '24px',
+            boxSizing: 'border-box',
+            zIndex: 2
+          }}
+        >
           
           {isSuccess ? (
             /* Success View */
-            <div className="h-full flex flex-col justify-center items-center text-center py-12" style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', margin: 'auto 0' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '24px', boxSizing: 'border-box' }}>
               <div 
-                className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
                 style={{ 
                   backgroundColor: 'var(--primary-glow)', 
                   border: '1.5px solid var(--primary)', 
@@ -212,7 +308,8 @@ export default function FeedbackDrawer({
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
                 }}
               >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -221,19 +318,19 @@ export default function FeedbackDrawer({
                 </svg>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>¡Muchas Gracias!</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)', maxWidth: '280px', lineHeight: '1.4' }}>
+                <h3 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)' }}>¡Muchas Gracias!</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '280px', lineHeight: '1.5' }}>
                   Your feedback has been logged directly. We review every submission to make {appName} even better.
                 </p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px', paddingTop: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '280px', paddingTop: '12px' }}>
                 <button
                   onClick={() => {
                     setIsSuccess(false);
                     setShowHistory(false);
                   }}
-                  className="btn-primary w-full py-2.5 rounded-lg text-sm font-semibold"
-                  style={{ width: '100%', padding: '10px 16px', cursor: 'pointer' }}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '12px 20px', cursor: 'pointer', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600 }}
                 >
                   Send More Feedback
                 </button>
@@ -242,8 +339,8 @@ export default function FeedbackDrawer({
                     setIsSuccess(false);
                     setShowHistory(true);
                   }}
-                  className="btn-secondary w-full py-2.5 rounded-lg text-sm font-semibold"
-                  style={{ width: '100%', padding: '10px 16px', cursor: 'pointer' }}
+                  className="btn-secondary"
+                  style={{ width: '100%', padding: '12px 20px', cursor: 'pointer', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600 }}
                 >
                   View Your Submissions
                 </button>
@@ -251,10 +348,10 @@ export default function FeedbackDrawer({
             </div>
           ) : showHistory ? (
             /* History View */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 className="text-sm font-semibold" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <h3 style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Your Past Submissions
@@ -267,7 +364,8 @@ export default function FeedbackDrawer({
                     cursor: 'pointer',
                     fontSize: '11px',
                     color: 'var(--text-muted)',
-                    textDecoration: 'underline'
+                    textDecoration: 'underline',
+                    padding: 0
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
                   onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
@@ -277,43 +375,46 @@ export default function FeedbackDrawer({
               </div>
 
               {history.length === 0 ? (
-                <div style={{ textAlignment: 'center', padding: '32px 16px', border: '1px dashed var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>No submissions yet.</p>
+                <div style={{ textAlign: 'center', padding: '36px 16px', border: '1px dashed var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>No submissions yet.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {history.map((item) => (
                     <div 
                       key={item.feedbackId} 
                       className="glass-card"
                       style={{ 
-                        padding: '14px', 
+                        padding: '16px', 
                         borderRadius: '12px', 
                         display: 'flex', 
                         flexDirection: 'column', 
-                        gap: '8px', 
+                        gap: '10px', 
                         position: 'relative',
-                        background: 'var(--slot-empty-bg)'
+                        background: 'var(--slot-empty-bg)',
+                        boxSizing: 'border-box'
                       }}
                     >
                       <div className="tech-corner-bracket tech-bracket-tl"></div>
                       <div className="tech-corner-bracket tech-bracket-tr"></div>
                       <div className="tech-corner-bracket tech-bracket-bl"></div>
                       <div className="tech-corner-bracket tech-bracket-br"></div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                         <span style={{ 
                           fontSize: '10px', 
-                          fontWeight: 600, 
-                          color: item.category === 'Bug Report' ? 'var(--error)' : 'var(--primary)',
-                          background: item.category === 'Bug Report' ? 'var(--error-glow)' : 'var(--primary-glow)',
-                          padding: '2px 8px',
+                          fontWeight: 700, 
+                          color: item.category === 'Bug Report' ? 'var(--error)' : item.category === 'Feature Request' ? 'var(--primary)' : 'var(--warning)',
+                          background: item.category === 'Bug Report' ? 'var(--error-glow)' : item.category === 'Feature Request' ? 'var(--primary-glow)' : 'var(--warning-glow)',
+                          padding: '3px 8px',
                           borderRadius: '12px',
-                          border: `1px solid ${item.category === 'Bug Report' ? 'var(--error)' : 'var(--border-color)'}`
+                          border: `1px solid ${item.category === 'Bug Report' ? 'var(--error)' : 'var(--border-color)'}`,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.03em'
                         }}>
                           {item.category}
                         </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px', color: 'var(--text-dim)' }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                           </svg>
@@ -322,7 +423,7 @@ export default function FeedbackDrawer({
                       </div>
                       
                       {item.rating > 0 && (
-                        <div style={{ display: 'flex', gap: '2px' }}>
+                        <div style={{ display: 'flex', gap: '3px' }}>
                           {[1, 2, 3, 4, 5].map((star) => (
                             <svg 
                               key={star} 
@@ -331,7 +432,7 @@ export default function FeedbackDrawer({
                               viewBox="0 0 24 24" 
                               fill={star <= item.rating ? 'var(--primary)' : 'none'} 
                               stroke="var(--primary)" 
-                              strokeWidth="2" 
+                              strokeWidth="2.2" 
                               strokeLinecap="round" 
                               strokeLinejoin="round"
                               style={{ opacity: star <= item.rating ? 1 : 0.2 }}
@@ -344,13 +445,15 @@ export default function FeedbackDrawer({
                       
                       <p style={{ 
                         margin: 0, 
-                        fontSize: '11px', 
+                        fontSize: '0.8rem', 
                         color: 'var(--text-muted)', 
                         lineHeight: '1.4',
                         background: 'rgba(0,0,0,0.02)',
-                        padding: '8px',
-                        borderRadius: '6px',
-                        fontStyle: 'italic'
+                        padding: '10px',
+                        borderRadius: '8px',
+                        fontStyle: 'italic',
+                        boxSizing: 'border-box',
+                        width: '100%'
                       }}>
                         "{item.comment}"
                       </p>
@@ -361,18 +464,18 @@ export default function FeedbackDrawer({
             </div>
           ) : (
             /* Submission Form View */
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px', boxSizing: 'border-box' }}>
               {/* Category selector */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Feedback Type
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <button
                     type="button"
                     onClick={() => setCategory('feature')}
                     style={{
-                      padding: '12px',
+                      padding: '12px 8px',
                       borderRadius: '10px',
                       border: category === 'feature' ? '1.5px solid var(--primary)' : '1px solid var(--border-color)',
                       background: category === 'feature' ? 'var(--primary-glow)' : 'transparent',
@@ -384,7 +487,8 @@ export default function FeedbackDrawer({
                       cursor: 'pointer',
                       fontSize: '11px',
                       fontWeight: 600,
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -398,7 +502,7 @@ export default function FeedbackDrawer({
                     type="button"
                     onClick={() => setCategory('bug')}
                     style={{
-                      padding: '12px',
+                      padding: '12px 8px',
                       borderRadius: '10px',
                       border: category === 'bug' ? '1.5px solid var(--error)' : '1px solid var(--border-color)',
                       background: category === 'bug' ? 'var(--error-glow)' : 'transparent',
@@ -410,7 +514,8 @@ export default function FeedbackDrawer({
                       cursor: 'pointer',
                       fontSize: '11px',
                       fontWeight: 600,
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -424,7 +529,7 @@ export default function FeedbackDrawer({
                     type="button"
                     onClick={() => setCategory('praise')}
                     style={{
-                      padding: '12px',
+                      padding: '12px 8px',
                       borderRadius: '10px',
                       border: category === 'praise' ? '1.5px solid var(--warning)' : '1px solid var(--border-color)',
                       background: category === 'praise' ? 'var(--warning-glow)' : 'transparent',
@@ -436,7 +541,8 @@ export default function FeedbackDrawer({
                       cursor: 'pointer',
                       fontSize: '11px',
                       fontWeight: 600,
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -449,7 +555,7 @@ export default function FeedbackDrawer({
                     type="button"
                     onClick={() => setCategory('other')}
                     style={{
-                      padding: '12px',
+                      padding: '12px 8px',
                       borderRadius: '10px',
                       border: category === 'other' ? '1.5px solid var(--accent)' : '1px solid var(--border-color)',
                       background: category === 'other' ? 'var(--accent-glow)' : 'transparent',
@@ -461,7 +567,8 @@ export default function FeedbackDrawer({
                       cursor: 'pointer',
                       fontSize: '11px',
                       fontWeight: 600,
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box'
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -581,7 +688,7 @@ export default function FeedbackDrawer({
               </div>
 
               {/* Form buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '10px', boxSizing: 'border-box' }}>
                 <button
                   type="submit"
                   disabled={isSubmitting || !comment.trim()}
@@ -595,11 +702,12 @@ export default function FeedbackDrawer({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    borderRadius: '10px'
                   }}
                 >
                   {isSubmitting ? (
-                    <div style={{ h: '16px', w: '16px', border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    <div style={{ height: '16px', width: '16px', border: '2px solid white', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                   ) : (
                     <>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -624,7 +732,8 @@ export default function FeedbackDrawer({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '6px'
+                      gap: '6px',
+                      borderRadius: '10px'
                     }}
                   >
                     View Previous Submissions ({history.length})
@@ -637,7 +746,18 @@ export default function FeedbackDrawer({
         </div>
 
         {/* Footer info */}
-        <div className="px-6 py-4 border-t border-color" style={{ borderColor: 'var(--border-color)', fontSize: '10px', color: 'var(--text-dim)', textAlign: 'center' }}>
+        <div 
+          style={{ 
+            borderColor: 'var(--border-color)', 
+            borderTop: '1px solid var(--border-color)',
+            padding: '16px 24px',
+            fontSize: '10px', 
+            color: 'var(--text-dim)', 
+            textAlign: 'center',
+            boxSizing: 'border-box',
+            zIndex: 2
+          }}
+        >
           Submitted feedback and logs are stored securely to improve your paradise experience.
         </div>
       </div>
