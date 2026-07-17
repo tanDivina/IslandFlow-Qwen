@@ -9,6 +9,7 @@ import WeatherHorizon from './components/WeatherHorizon';
 import CaptainPortal from './components/CaptainPortal';
 import OperatorLoginForm from './components/OperatorLoginForm';
 import Magnet from './components/Magnet';
+import FeedbackDrawer from './components/FeedbackDrawer';
 
 
 
@@ -170,8 +171,17 @@ function App() {
   const [captains, setCaptains] = useState([]);
   const [isItineraryOnly, setIsItineraryOnly] = useState(initialParams.itineraryOnly);
   const [archActiveLayer, setArchActiveLayer] = useState('all');
-  const [selectedToolId, setSelectedToolId] = useState('get_tours');
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
+  useEffect(() => {
+    const handleOpenFeedback = () => {
+      setIsFeedbackOpen(true);
+    };
+    window.addEventListener('open-feedback-drawer', handleOpenFeedback);
+    return () => {
+      window.removeEventListener('open-feedback-drawer', handleOpenFeedback);
+    };
+  }, []);
 
   // Synchronize view state with browser URL search parameters for Pendo pageview tracking and bookmarkability
   useEffect(() => {
@@ -1567,11 +1577,7 @@ function App() {
               </span>
               <button 
                 onClick={() => {
-                  const feedback = prompt("Please share your feedback on this AI experience:");
-                  if (feedback) {
-                    alert("Thank you for your feedback! It has been logged.");
-                    console.log("Feedback received:", feedback);
-                  }
+                  window.dispatchEvent(new Event('open-feedback-drawer'));
                 }}
                 title="Share Feedback on this AI Experience"
                 style={{
@@ -5874,6 +5880,13 @@ function App() {
           <CaptainPortal captainId={captainId} logistics={logistics} lang={lang} setLang={setLang} onBackToLanding={() => setView('landing')} />
         </ErrorBoundary>
       )}
+
+      <FeedbackDrawer 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+        userEmail={guestId || ''} 
+        appName="IslandFlow"
+      />
     </div>
   );
 }

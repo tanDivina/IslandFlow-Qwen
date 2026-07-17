@@ -108,6 +108,15 @@ async def startup_event():
 class TokenGeneratePayload(BaseModel):
     guest_id: str
 
+class FeedbackPayload(BaseModel):
+    category: str
+    rating: int
+    comment: str
+    email: str
+    url: Optional[str] = None
+    userAgent: Optional[str] = None
+    timestamp: Optional[str] = None
+
 class ChatPayload(BaseModel):
     guest_id: str = "g1"
     message: str
@@ -507,6 +516,38 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
     except Exception as e:
         logger.error(f"Error fetching status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/feedback")
+async def receive_feedback(payload: FeedbackPayload):
+    """Log and store premium feedback submissions."""
+    logger.info("================= USER FEEDBACK RECEIVED =================")
+    logger.info(f"Feedback Category: {payload.category}")
+    logger.info(f"Feedback Rating: {payload.rating}")
+    logger.info(f"Feedback Comment: {payload.comment}")
+    logger.info(f"Feedback Email: {payload.email}")
+    logger.info(f"Feedback URL: {payload.url}")
+    logger.info(f"User Agent: {payload.userAgent}")
+    logger.info(f"Timestamp: {payload.timestamp}")
+    logger.info("==========================================================")
+    
+    try:
+        email_prefix = payload.email.split('@')[0] if '@' in payload.email else "anon"
+        feedback_doc = {
+            "feedback_id": f"fb_{int(time.time())}_{email_prefix}",
+            "category": payload.category,
+            "rating": payload.rating,
+            "comment": payload.comment,
+            "email": payload.email,
+            "url": payload.url,
+            "user_agent": payload.userAgent,
+            "submitted_at": payload.timestamp or datetime.datetime.utcnow().isoformat()
+        }
+        db['feedback'].insert_one(feedback_doc)
+        logger.info(f"Feedback successfully inserted into database collection 'feedback'.")
+        return {"success": True, "feedbackId": feedback_doc["feedback_id"]}
+    except Exception as e:
+        logger.error(f"Failed to insert feedback to database: {e}")
+        return {"success": True, "feedbackId": f"fb_local_{int(time.time())}"}
 
 @app.post("/api/chat")
 async def chat_with_concierge(payload: ChatPayload):

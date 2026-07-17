@@ -162,11 +162,7 @@ export default function ChatWidget({
         {/* Product Feedback Button */}
         <button 
           onClick={() => {
-            const feedback = prompt("Please share your feedback on this AI experience:");
-            if (feedback) {
-              alert("Thank you for your feedback! It has been logged.");
-              console.log("Feedback received:", feedback);
-            }
+            window.dispatchEvent(new Event('open-feedback-drawer'));
           }}
           title="Share Feedback on this AI Experience"
           style={{
