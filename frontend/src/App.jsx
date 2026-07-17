@@ -1250,7 +1250,12 @@ function App() {
   const currentActiveBrand = tenantBrand;
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: 'relative' }}>
+      {/* Precision design layout guidelines */}
+      <div className="tech-guide-vertical" style={{ left: '60px', opacity: 0.15 }}></div>
+      <div className="tech-guide-vertical" style={{ right: '60px', opacity: 0.15 }}></div>
+      <div className="tech-guide-horizontal" style={{ top: '65px', opacity: 0.15 }}></div>
+
       {/* Live Push Notification Simulation Toast */}
       {showPushToast && (
         <div style={{
@@ -1787,8 +1792,13 @@ function App() {
           </div>
 
           {/* Role selection Cards */}
+          {/* Role selection Cards */}
           <div className="role-selector-grid">
-            <div className="glass-card role-card">
+            <div className="glass-card role-card" style={{ position: 'relative' }}>
+              <div className="tech-corner-bracket tech-bracket-tl"></div>
+              <div className="tech-corner-bracket tech-bracket-tr"></div>
+              <div className="tech-corner-bracket tech-bracket-bl"></div>
+              <div className="tech-corner-bracket tech-bracket-br"></div>
               <div className="role-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -1800,14 +1810,18 @@ function App() {
               </p>
               <button className="btn-primary" onClick={() => setView('guest')}>
                 Enter Guest Portal
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="hover-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
             </div>
 
-            <div className="glass-card role-card">
+            <div className="glass-card role-card" style={{ position: 'relative' }}>
+              <div className="tech-corner-bracket tech-bracket-tl"></div>
+              <div className="tech-corner-bracket tech-bracket-tr"></div>
+              <div className="tech-corner-bracket tech-bracket-bl"></div>
+              <div className="tech-corner-bracket tech-bracket-br"></div>
               <div className="role-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
@@ -1820,14 +1834,18 @@ function App() {
               </p>
               <button className="btn-primary" onClick={() => setView('operator')}>
                 Enter Operator Dashboard
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="hover-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
             </div>
 
-            <div className="glass-card role-card">
+            <div className="glass-card role-card" style={{ position: 'relative' }}>
+              <div className="tech-corner-bracket tech-bracket-tl"></div>
+              <div className="tech-corner-bracket tech-bracket-tr"></div>
+              <div className="tech-corner-bracket tech-bracket-bl"></div>
+              <div className="tech-corner-bracket tech-bracket-br"></div>
               <div className="role-icon-wrapper">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#3ecdc6' }}>
                   <path d="M2 12h20M12 2v20" />
@@ -1867,7 +1885,7 @@ function App() {
                 </select>
                 <button className="btn-primary" onClick={() => setView('captain')}>
                   Enter Captain Portal
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="hover-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                   </svg>

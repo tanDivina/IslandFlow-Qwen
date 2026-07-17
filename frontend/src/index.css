@@ -13,9 +13,9 @@
 body, body.theme-sunny {
   color-scheme: light;
   --bg-color: hsl(38, 30%, 98%);
-  --panel-bg: hsla(38, 30%, 95%, 0.85);
-  --border-color: hsla(38, 40%, 60%, 0.22);
-  --border-glow: hsla(38, 40%, 60%, 0.4);
+  --panel-bg: hsla(38, 30%, 95%, 0.82);
+  --border-color: hsla(38, 25%, 72%, 0.18);
+  --border-glow: hsla(38, 40%, 60%, 0.3);
   --primary-btn-text: #ffffff;
   
   --primary: hsl(38, 40%, 45%);        /* Champagne/Sand Gold (darker for contrast) */
@@ -31,23 +31,23 @@ body, body.theme-sunny {
   --text-muted: hsl(210, 12%, 38%);    /* Muted Slate */
   --text-dim: hsl(210, 8%, 52%);      /* Dim Slate */
   
-  --slot-bg: hsla(38, 30%, 93%, 0.85);
+  --slot-bg: hsla(38, 30%, 92%, 0.85);
   --slot-empty-bg: hsla(38, 30%, 96%, 0.45);
-  --msg-user-bg: hsla(38, 45%, 60%, 0.14);
+  --msg-user-bg: hsla(38, 45%, 60%, 0.12);
   --msg-agent-bg: hsla(188, 55%, 38%, 0.08);
   
   --bg-card-nested: rgba(0, 0, 0, 0.03);
   
-  background-image: none;
+  background-image: radial-gradient(circle at 50% 0%, hsla(38, 35%, 99%, 1) 0%, hsla(38, 30%, 97%, 1) 60%, hsla(38, 25%, 94%, 1) 100%);
 }
 
 /* Rainy Mode (Cozy Stormy Harbor - Soft Mist Gray & Cool Navy) */
 body.theme-rainy {
   color-scheme: light;
   --bg-color: hsl(222, 15%, 97%);
-  --panel-bg: hsla(222, 15%, 94%, 0.85);
-  --border-color: hsla(222, 12%, 50%, 0.22);
-  --border-glow: hsla(222, 22%, 55%, 0.35);
+  --panel-bg: hsla(222, 15%, 94%, 0.82);
+  --border-color: hsla(222, 12%, 72%, 0.18);
+  --border-glow: hsla(222, 22%, 55%, 0.28);
   --primary-btn-text: #ffffff;
   
   --primary: hsl(222, 22%, 48%);       /* Stormy Navy Blue */
@@ -63,14 +63,14 @@ body.theme-rainy {
   --text-muted: hsl(222, 12%, 38%);
   --text-dim: hsl(222, 8%, 52%);
   
-  --slot-bg: hsla(222, 15%, 92%, 0.85);
+  --slot-bg: hsla(222, 15%, 91%, 0.85);
   --slot-empty-bg: hsla(222, 15%, 95%, 0.4);
-  --msg-user-bg: hsla(222, 22%, 58%, 0.12);
+  --msg-user-bg: hsla(222, 22%, 58%, 0.1);
   --msg-agent-bg: hsla(38, 35%, 50%, 0.08);
   
   --bg-card-nested: rgba(0, 0, 0, 0.03);
   
-  background-image: none;
+  background-image: radial-gradient(circle at 50% 0%, hsla(222, 15%, 99%, 1) 0%, hsla(222, 12%, 97%, 1) 60%, hsla(222, 10%, 94%, 1) 100%);
 }
 
 * {
@@ -873,3 +873,119 @@ body {
 .stagger-6 { animation-delay: 0.24s; }
 .stagger-7 { animation-delay: 0.28s; }
 .stagger-8 { animation-delay: 0.32s; }
+
+/* ==========================================================================
+   PAPER-TECHNICAL GEOMETRY & MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Fine technical diagonal stripes overlay */
+.tech-pattern-overlay {
+  background-image: repeating-linear-gradient(45deg, var(--border-color) 0px, var(--border-color) 1px, transparent 1px, transparent 8px);
+  opacity: 0.12;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Precision guide lines */
+.tech-guide-vertical {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--border-color);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tech-guide-horizontal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-color);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Precision L-brackets or tiny corner squares */
+.tech-corner-bracket {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--primary);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.tech-bracket-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1.5px solid var(--primary);
+  border-left: 1.5px solid var(--primary);
+}
+
+.tech-bracket-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1.5px solid var(--primary);
+  border-right: 1.5px solid var(--primary);
+}
+
+.tech-bracket-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1.5px solid var(--primary);
+  border-left: 1.5px solid var(--primary);
+}
+
+.tech-bracket-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1.5px solid var(--primary);
+  border-right: 1.5px solid var(--primary);
+}
+
+/* Dynamic slider hover animations for forward/backward action arrows */
+.hover-arrow {
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-primary:hover .hover-arrow, 
+.btn-secondary:hover .hover-arrow,
+.role-card:hover .hover-arrow {
+  transform: translateX(4px);
+}
+
+.btn-back:hover .hover-arrow {
+  transform: translateX(-4px);
+}
+
+/* Upgraded micro-interactions on cards and buttons */
+.btn-primary, .btn-secondary, .role-card, .glass-card {
+  transition: transform 0.28s cubic-bezier(0.25, 0.8, 0.25, 1),
+              box-shadow 0.28s cubic-bezier(0.25, 0.8, 0.25, 1),
+              border-color 0.28s cubic-bezier(0.25, 0.8, 0.25, 1),
+              background-color 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Gentle reveal masks */
+.masked-reveal-parent {
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .tech-guide-vertical, .tech-guide-horizontal {
+    display: none !important;
+  }
+}
+
+
