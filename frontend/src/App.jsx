@@ -5884,7 +5884,7 @@ function App() {
       <FeedbackDrawer 
         isOpen={isFeedbackOpen} 
         onClose={() => setIsFeedbackOpen(false)} 
-        userEmail={guestId || ''} 
+        userEmail={guestId && guestId.includes('@') ? guestId : ''} 
         appName="IslandFlow"
       />
     </div>

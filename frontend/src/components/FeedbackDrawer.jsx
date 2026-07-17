@@ -10,7 +10,7 @@ export default function FeedbackDrawer({
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [email, setEmail] = useState(userEmail);
+  const [email, setEmail] = useState(userEmail && userEmail.includes('@') ? userEmail : '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [history, setHistory] = useState([]);
@@ -33,7 +33,7 @@ export default function FeedbackDrawer({
 
   // Sync email when prop changes
   useEffect(() => {
-    if (userEmail) {
+    if (userEmail && userEmail.includes('@')) {
       setEmail(userEmail);
     }
   }, [userEmail]);
