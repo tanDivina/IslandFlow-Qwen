@@ -1349,16 +1349,15 @@ function App() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <h1 className="app-title" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => navigateToView('landing')}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', filter: 'drop-shadow(0 0 5px var(--primary-glow))', flexShrink: 0, transform: 'rotate(-5deg)' }}>
-                  <path d="M11 22c.5-2.5 1.5-5 1.5-8" />
-                  <path d="M12.5 14c-1.5-1.5-3.5-2-5.5-1" />
-                  <path d="M12.5 14c.2-2-1-4-3-5" />
-                  <path d="M12.5 14c1.8-1.5 3-3 3.2-5" />
-                  <path d="M12.5 14c2.2-.2 4 1 5.2 2.5" />
-                  <path d="M12.5 14c1 2.2.5 4.2-1 5.5" />
-                  <path d="M12.5 14c-1 2-2.5 3-4.5 2.5" />
-                  <circle cx="11.5" cy="13.2" r="1" fill="currentColor" />
-                  <circle cx="13" cy="12.5" r="1" fill="currentColor" />
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <path d="M12 22c1-4 1-8 0-12" />
+                  <path d="M5 22c2-.5 12-.5 14 0" />
+                  <path d="M12 10c-3-2-7-1-9 2" />
+                  <path d="M12 10c3-2 7-1 9 2" />
+                  <path d="M12 10c-4 .5-8 3-9 7" />
+                  <path d="M12 10c4 .5 8 3 9 7" />
+                  <path d="M12 10c-1.5-4-5-6-8-6" />
+                  <path d="M12 10c1.5-4 5-6 8-6" />
                 </svg>
                 IslandFlow
               </h1>
