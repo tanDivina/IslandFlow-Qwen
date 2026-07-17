@@ -896,6 +896,210 @@ async def add_tour(payload: AddTourPayload):
         logger.error(f"Error adding custom tour: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Captain Portal and Operator Assignment Payloads & Endpoints
+class AssignCaptainPayload(BaseModel):
+    booking_id: str
+    captain_id: Optional[str] = None
+
+@app.post("/api/operator/assign-captain")
+async def assign_captain(payload: AssignCaptainPayload):
+    """Assign a captain to a booking and update corresponding dispatch."""
+    try:
+        booking = db["bookings"].find_one({"_id": payload.booking_id})
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        db["bookings"].update_one(
+            {"_id": payload.booking_id},
+            {"$set": {"captain_id": payload.captain_id, "captain_status": "assigned"}}
+        )
+        
+        if payload.captain_id:
+            mapping = {
+                "cap1": {"name": "Capitán Luis", "vessel": "La Estrella"},
+                "cap2": {"name": "Capitán Marco", "vessel": "Isla Bonita"},
+                "cap3": {"name": "Capitán Rosa", "vessel": "Coral Queen"}
+            }
+            cap_info = mapping.get(payload.captain_id)
+            if not cap_info:
+                # Try database query
+                cap_doc = db["captains"].find_one({"_id": payload.captain_id})
+                if cap_doc:
+                    cap_info = {"name": cap_doc.get("name"), "vessel": cap_doc.get("vessel")}
+                else:
+                    cap_info = {"name": "Capitán Jose", "vessel": "Panga Blanca"}
+            
+            captain_name = cap_info["name"]
+            boat_name = cap_info["vessel"]
+            
+            db["dispatches"].update_one(
+                {"booking_id": payload.booking_id},
+                {"$set": {
+                    "captain": captain_name,
+                    "boat": boat_name,
+                    "captain_id": payload.captain_id,
+                    "status": "assigned"
+                }},
+                upsert=True
+            )
+        else:
+            db["dispatches"].update_one(
+                {"booking_id": payload.booking_id},
+                {"$set": {
+                    "captain": "None (Unassigned)",
+                    "boat": None,
+                    "captain_id": None
+                }}
+            )
+            
+        logger.info(f"Successfully assigned captain {payload.captain_id} to booking {payload.booking_id}")
+        return {"success": True, "message": "Captain successfully assigned"}
+    except Exception as e:
+        logger.error(f"Error in assign_captain: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/captain/manifest/{captain_id}")
+async def get_captain_manifest(captain_id: str):
+    """Retrieve all bookings assigned to this captain."""
+    try:
+        bookings = list(db["bookings"].find({}))
+        assigned_bookings = []
+        for b in bookings:
+            if b.get("captain_id") == captain_id:
+                assigned_bookings.append(b)
+            elif captain_id == "cap1" and b.get("captain_id") in ["cap1", "c1"]:
+                assigned_bookings.append(b)
+            elif captain_id == "cap2" and b.get("captain_id") in ["cap2", "c2"]:
+                assigned_bookings.append(b)
+            elif captain_id == "cap3" and b.get("captain_id") in ["cap3", "c3"]:
+                assigned_bookings.append(b)
+                
+        manifest_items = []
+        for b in assigned_bookings:
+            guest_id = b.get("guest_id")
+            tour_id = b.get("tour_id")
+            
+            guest = db["guests"].find_one({"_id": guest_id})
+            tour = db["tours"].find_one({"_id": tour_id})
+            
+            # Ensure serialization clean
+            if b and "_id" in b:
+                b["_id"] = str(b["_id"])
+            if guest and "_id" in guest:
+                guest["_id"] = str(guest["_id"])
+            if tour and "_id" in tour:
+                tour["_id"] = str(tour["_id"])
+                
+            manifest_items.append({
+                "booking": b,
+                "guest": guest,
+                "tour": tour
+            })
+        return manifest_items
+    except Exception as e:
+        logger.error(f"Error getting captain manifest: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class UpdateStatusPayload(BaseModel):
+    booking_id: str
+    status: str
+    notes: Optional[str] = ""
+
+@app.post("/api/captain/update-status")
+async def update_captain_status(payload: UpdateStatusPayload):
+    """Update status and notes of a booking dispatch."""
+    try:
+        booking = db["bookings"].find_one({"_id": payload.booking_id})
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        db["bookings"].update_one(
+            {"_id": payload.booking_id},
+            {"$set": {
+                "captain_status": payload.status,
+                "captain_notes": payload.notes
+            }}
+        )
+        
+        db["dispatches"].update_one(
+            {"booking_id": payload.booking_id},
+            {"$set": {
+                "status": payload.status,
+                "notes": payload.notes
+            }}
+        )
+        
+        if payload.status in ["unsafe-conditions", "delayed"]:
+            guest_id = booking.get("guest_id")
+            tour_id = booking.get("tour_id")
+            guest = db["guests"].find_one({"_id": guest_id})
+            tour = db["tours"].find_one({"_id": tour_id})
+            guest_name = guest.get("name") if guest else "Guest"
+            tour_name = tour.get("name") if tour else "Tour"
+            
+            captain_id = booking.get("captain_id")
+            mapping = {"cap1": "Capitán Luis", "cap2": "Capitán Marco", "cap3": "Capitán Rosa"}
+            captain_name = mapping.get(captain_id, "Captain")
+            
+            alert_message = f"🚨 Capitán {captain_name} reported status '{payload.status}' for {guest_name}'s {tour_name} transfer. Notes: {payload.notes}"
+            db["captain_notifications"].insert_one({
+                "_id": f"notif_{int(time.time() * 1000) % 10000}",
+                "booking_id": payload.booking_id,
+                "captain_id": captain_id,
+                "message": alert_message,
+                "status": "unread",
+                "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
+            })
+            
+        return {"success": True, "message": "Status updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating captain status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class ReportConditionsPayload(BaseModel):
+    captain_id: str
+    wave_height: float
+    wind_speed: float = 0.0
+    weather_summary: str
+    safety_flag: bool = False
+
+@app.post("/api/captain/report-conditions")
+async def report_conditions(payload: ReportConditionsPayload):
+    """Log marine observations from boat captains and update active date logistics."""
+    try:
+        mapping = {"cap1": "Capitán Luis", "cap2": "Capitán Marco", "cap3": "Capitán Rosa"}
+        captain_name = mapping.get(payload.captain_id, "Capitán")
+        
+        flag_icon = "🚨" if payload.safety_flag else "🌊"
+        alert_message = f"{flag_icon} {captain_name} reported marine conditions: Swell {payload.wave_height}m, Wind {payload.wind_speed}kts, Weather: '{payload.weather_summary}'. Safety Warning: {'YES' if payload.safety_flag else 'NO'}"
+        
+        db["captain_notifications"].insert_one({
+            "_id": f"notif_{int(time.time() * 1000) % 10000}",
+            "captain_id": payload.captain_id,
+            "message": alert_message,
+            "status": "unread",
+            "timestamp": datetime.datetime.now().strftime("%I:%M:%S %p")
+        })
+        
+        demo_dates = ["2026-07-17", "2026-05-30", datetime.date.today().strftime("%Y-%m-%d")]
+        for d in demo_dates:
+            db["logistics"].update_one(
+                {"date": d},
+                {"$set": {
+                    "wave_height": payload.wave_height,
+                    "wind_speed": payload.wind_speed,
+                    "summary": payload.weather_summary,
+                    "updated_by": captain_name
+                }},
+                upsert=True
+            )
+            
+        return {"success": True, "message": "Conditions reported successfully"}
+    except Exception as e:
+        logger.error(f"Error reporting conditions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 class TenantBrandExtraction(BaseModel):
     name: str = Field(description="The elegant name of the hotel, resort, or luxury lodge (e.g. 'Nayara Bocas del Toro')")
     primary_color: str = Field(description="A curated, premium brand primary color in HSL format 'hsl(H, S%, L%)'. Must be dark-mode-friendly, highly vibrant, and elegant. Avoid raw dull colors; prefer sand gold, emerald green, warm amber, sea turquoise, hibiscus magenta.")
