@@ -1349,6 +1349,17 @@ function App() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <h1 className="app-title" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => navigateToView('landing')}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', filter: 'drop-shadow(0 0 5px var(--primary-glow))', flexShrink: 0, transform: 'rotate(-5deg)' }}>
+                  <path d="M11 22c.5-2.5 1.5-5 1.5-8" />
+                  <path d="M12.5 14c-1.5-1.5-3.5-2-5.5-1" />
+                  <path d="M12.5 14c.2-2-1-4-3-5" />
+                  <path d="M12.5 14c1.8-1.5 3-3 3.2-5" />
+                  <path d="M12.5 14c2.2-.2 4 1 5.2 2.5" />
+                  <path d="M12.5 14c1 2.2.5 4.2-1 5.5" />
+                  <path d="M12.5 14c-1 2-2.5 3-4.5 2.5" />
+                  <circle cx="11.5" cy="13.2" r="1" fill="currentColor" />
+                  <circle cx="13" cy="12.5" r="1" fill="currentColor" />
+                </svg>
                 IslandFlow
               </h1>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
