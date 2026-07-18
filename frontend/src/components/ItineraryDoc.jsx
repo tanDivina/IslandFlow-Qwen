@@ -4,7 +4,7 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
   const renderMarkdown = (md) => {
     if (!md) {
       return (
-        <div style={{ color: 'var(--text-dim)', fontStyle: 'italic', textAlign: 'center', padding: '40px 0' }}>
+        <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontStyle: 'italic', textAlign: 'center', padding: '40px 0', fontSize: '0.9rem', lineHeight: '1.6' }}>
           Your official travel receipt will appear here. Ask your concierge in the chat to book activities, or confirm a rescheduled activity swap to generate your updated itinerary receipt.
         </div>
       );
@@ -65,11 +65,11 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'hsl(222, 47%, 9%)', minHeight: '400px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'hsl(222, 47%, 9%)', color: '#ffffff', minHeight: '400px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '12px' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: '#f8fafc', margin: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary, #38bdf8)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
               <line x1="16" y1="13" x2="8" y2="13" />
@@ -85,15 +85,21 @@ export default function ItineraryDoc({ itineraryMarkdown, guestId = "g1" }) {
               className="btn-secondary" 
               onClick={() => window.print()} 
               style={{ 
-                padding: '8px 12px', 
+                padding: '8px 14px', 
                 fontSize: '0.8rem',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '6px',
+                color: '#ffffff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />

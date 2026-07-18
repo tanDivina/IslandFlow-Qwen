@@ -638,16 +638,7 @@ function App() {
         }
         
         const newMarkdown = data.itinerary_markdown || '';
-        setItineraryMarkdown(prev => {
-          // Trigger the updated itinerary popup modal ONLY if the guest ID remains the same
-          // (This avoids triggering the modal merely when switching active guest profiles)
-          if (lastGuestIdRef.current === data.guest_id) {
-            if (prev && newMarkdown && prev !== newMarkdown) {
-              setShowItineraryModal(true);
-            }
-          }
-          return newMarkdown;
-        });
+        setItineraryMarkdown(newMarkdown);
         
         // Update our guest tracker ref with the newly loaded guest ID
         if (data.guest_id) {
