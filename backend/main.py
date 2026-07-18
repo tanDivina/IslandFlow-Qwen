@@ -898,6 +898,52 @@ async def sync_guest_from_pms(payload: PMSSyncPayload):
         logger.error(f"Error in PMS sync endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class OperatorLoginPayload(BaseModel):
+    email: str
+    password: str
+
+@app.post("/api/operator/login")
+async def operator_login(payload: OperatorLoginPayload):
+    """Authenticate hotel operator via 1-tap demo switcher or standard credentials."""
+    try:
+        demo_hotels = {
+            "nayara@hotel.com": {"id": "hotel_nayara", "name": "Nayara Bocas del Toro"},
+            "sweetbocas@hotel.com": {"id": "hotel_sweetbocas", "name": "Sweet Bocas"},
+            "lacoralina@hotel.com": {"id": "hotel_lacoralina", "name": "La Coralina Island House"},
+            "redfrog@hotel.com": {"id": "hotel_redfrog", "name": "Red Frog Beach Resort"},
+            "bocasvillas@hotel.com": {"id": "hotel_bocasvillas", "name": "Bocas Luxury Villas"},
+        }
+        
+        email_lower = payload.email.strip().lower()
+        
+        # 1. Check if email is in standard demo resorts list
+        if email_lower in demo_hotels:
+            hotel = demo_hotels[email_lower]
+            logger.info(f"Successful demo operator login for hotel: {hotel['name']} ({hotel['id']})")
+            return {
+                "status": "success",
+                "hotel_id": hotel["id"],
+                "hotel_name": hotel["name"]
+            }
+            
+        # 2. Check dynamic database onboarded custom brands
+        tenant = db["tenants"].find_one({"email": email_lower})
+        if tenant:
+            logger.info(f"Successful custom operator login for hotel: {tenant['name']} ({tenant['_id']})")
+            return {
+                "status": "success",
+                "hotel_id": tenant["_id"],
+                "hotel_name": tenant["name"]
+            }
+            
+        # 3. Raise unauthorized error if no match found
+        raise HTTPException(status_code=401, detail="Invalid operator email or password")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in operator login endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 class AddTourPayload(BaseModel):
     name: str
     type: str  # "outdoor" or "indoor"
