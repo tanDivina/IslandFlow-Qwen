@@ -1026,7 +1026,7 @@ function App() {
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b0f19; padding:40px 10px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:#111827; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; background-color:#111827; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
           <!-- Brand Header -->
           <tr>
             <td align="center" style="background-color:#1f2937; padding:30px 20px; border-bottom:2px solid ${primaryColor};">
@@ -5599,12 +5599,21 @@ function App() {
                           background: '#0b0f19',
                           border: '1px solid var(--border-color)',
                           borderRadius: '0 0 12px 12px',
-                          height: '420px',
-                          overflowY: 'auto',
-                          padding: '10px',
-                          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.5)'
+                          height: '520px',
+                          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.5)',
+                          overflow: 'hidden'
                         }}>
-                          <div dangerouslySetInnerHTML={{ __html: getEmailHtmlSource(activeMessagingGuest) }} />
+                          <iframe
+                            srcDoc={getEmailHtmlSource(activeMessagingGuest)}
+                            title="Email Template Preview"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              border: 'none',
+                              background: '#0b0f19',
+                              display: 'block'
+                            }}
+                          />
                         </div>
                       </div>
                     )}
