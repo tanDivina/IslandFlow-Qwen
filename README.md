@@ -1,4 +1,19 @@
 # 🏝️ IslandFlow: Weather-Intelligent Eco-Tourism Concierge & MemoryAgent
+> **Persistent guest memory meets weather-intelligent marine dispatch. Powered by Qwen 3.7 Plus & Alibaba Cloud OSS.**
+
+---
+
+## 🆕 Devpost Update: What has been added since the previous project?
+As an existing project submitted to a previous hackathon, **IslandFlow** has been completely overhauled and enriched with major new features during this hackathon iteration:
+
+1. **🧠 Unified Core Cognitive Qwen Agent**: Replaced the previous proprietary reasoning stack with **Qwen 3.7 Plus (via DashScope API)** as the central brain. Qwen now powers conversational reasoning, real-time context-sensitive preference extraction, and translation with complete thread-safety.
+2. **🌧️ Dynamic Open-Meteo Weather Syncer**: Upgraded the static simulation loop to a live weather aggregator. The backend dynamically fetches, calculates, and synchronizes average daily marine weather variables and temperatures directly to MongoDB, with client-side deterministic variance (\(\pm 2^\circ\text{C}\)) to prevent visual repetition across consecutive days.
+3. **⚓ Dynamic Captain Onboarding & Fleet Expansion**: Added a full-stack captain onboarding flow. Resort operators can now register new local water-taxi or excursion captains directly from the control panel. The frontend submits a POST request to a new FastAPI `/api/operator/add-captain` endpoint, writing to a persistent MongoDB captains collection and refreshing the live operator assignable state instantly.
+4. **💬 Real-Time Weather Rescheduling Simulation**: Created a realistic, brand-aligned interactive chat box that guides the operator and guest through a live weather-delay rescheduling dialogue. Features an on-brand museum-tour alternative (completely replacing the placeholder cacao farm tour) and outputs speech bubbles one-by-one with micro-animations.
+5. **🕶️ High-Contrast Accessibility Overrides**: Resolved a common macOS/Chrome/Safari dark-theme backdrop contrast issue. All select dropdown lists and child options now feature explicitly-styled solid backgrounds (`#1e293b`) and high-contrast text (`#f8fafc`) for perfect readability.
+6. **🌴 Brand-Aligned Visual Theme & Scale**: Completely removed generic cartoonish clip-art icons in favor of inline vector SVGs. Built brand-custom dual-sided portals utilizing Panama-style palm tree SVGs in contrasting colors. Scaled up media layout bounds to optimize visibility on presentation screens.
+
+---
 
 ### **Track 1: MemoryAgent — Global AI Hackathon Series with Qwen Cloud**
 

@@ -169,6 +169,8 @@ function App() {
   const [captainId, setCaptainId] = useState(initialParams.captainId || 'cap1');
   const [onboardingCaptainId, setOnboardingCaptainId] = useState('cap1');
   const [captains, setCaptains] = useState([]);
+  const [newCapName, setNewCapName] = useState('');
+  const [newCapBoat, setNewCapBoat] = useState('');
   const [isItineraryOnly, setIsItineraryOnly] = useState(initialParams.itineraryOnly);
   const [archActiveLayer, setArchActiveLayer] = useState('all');
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -1247,6 +1249,41 @@ function App() {
       setLoading(false);
     }
   };
+  
+  const handleOnboardCaptain = async () => {
+    if (!newCapName.trim() || !newCapBoat.trim()) {
+      alert('Please enter both captain name and boat name.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/operator/add-captain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCapName.trim(), boat: newCapBoat.trim() })
+      });
+      if (!res.ok) throw new Error('Failed to onboard captain');
+      const data = await res.json();
+      
+      setCaptains(prev => [...prev, data.captain]);
+      setNewCapName('');
+      setNewCapBoat('');
+      
+      setPushToastText(`Captain ${data.captain.name} onboarded successfully!`);
+      setShowPushToast(true);
+      setTimeout(() => setShowPushToast(false), 4500);
+      
+      addLog(`[Onboard] Onboarded Captain ${data.captain.name} with vessel ${data.captain.boat}`);
+      
+      // Refresh status to synchronize all lists
+      await fetchStatus(guestId);
+    } catch (err) {
+      console.error(err);
+      alert('Error onboarding new captain.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const currentActiveBrand = tenantBrand;
 
@@ -1859,24 +1896,25 @@ function App() {
                   onChange={(e) => setCaptainId(e.target.value)}
                   style={{
                     width: '100%',
-                    background: 'rgba(15, 23, 42, 0.6)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: '#1e293b',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
                     borderRadius: '8px',
                     padding: '8px 12px',
                     color: '#f8fafc',
                     fontSize: '13px',
                     outline: 'none',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
                   }}
                 >
                   {captains.map(c => (
-                    <option key={c._id} value={c._id}>{c.name} ({c.boat})</option>
+                    <option key={c._id} value={c._id} style={{ background: '#1e293b', color: '#f8fafc' }}>{c.name} ({c.boat || 'Water Taxi'})</option>
                   ))}
                   {captains.length === 0 && (
                     <>
-                      <option value="cap1">Captain Luis (La Estrella)</option>
-                      <option value="cap2">Captain Marco (Isla Bonita)</option>
-                      <option value="cap3">Captain Rosa (Coral Queen)</option>
+                      <option value="cap1" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Luis (La Estrella)</option>
+                      <option value="cap2" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Marco (Isla Bonita)</option>
+                      <option value="cap3" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Rosa (Coral Queen)</option>
                     </>
                   )}
                 </select>
@@ -2956,25 +2994,24 @@ function App() {
                   value={onboardingCaptainId}
                   onChange={(e) => setOnboardingCaptainId(e.target.value)}
                   style={{
-                    background: 'var(--bg-color, #ffffff)',
+                    background: '#1e293b',
                     border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
+                    color: '#f8fafc',
                     borderRadius: '8px',
                     padding: '8px 12px',
                     fontSize: '13px',
                     outline: 'none',
-                    colorScheme: 'light',
                     cursor: 'pointer'
                   }}
                 >
                   {(captains || []).map(c => (
-                    <option key={c._id} value={c._id}>{c.name} ({c.boat || 'Water Taxi'})</option>
+                    <option key={c._id} value={c._id} style={{ background: '#1e293b', color: '#f8fafc' }}>{c.name} ({c.boat || 'Water Taxi'})</option>
                   ))}
                   {captains.length === 0 && (
                     <>
-                      <option value="cap1">Captain Luis (La Estrella)</option>
-                      <option value="cap2">Captain Marco (Isla Bonita)</option>
-                      <option value="cap3">Captain Rosa (Coral Queen)</option>
+                      <option value="cap1" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Luis (La Estrella)</option>
+                      <option value="cap2" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Marco (Isla Bonita)</option>
+                      <option value="cap3" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Rosa (Coral Queen)</option>
                     </>
                   )}
                 </select>
@@ -3192,6 +3229,83 @@ function App() {
               })()}
             </div>
 
+            {/* Dynamic Add Captain Form */}
+            <div className="glass-card fade-in-entry stagger-5" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px solid rgba(168, 255, 53, 0.15)' }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                  ⚓ Onboard New Boat Captain
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Register a new local water-taxi or tour boat captain and their vessel. They will immediately become assignable to guest excursions.
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Captain Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Captain Jose"
+                    value={newCapName}
+                    onChange={(e) => setNewCapName(e.target.value)}
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      color: '#f8fafc',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Vessel / Boat Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Panga Blanca"
+                    value={newCapBoat}
+                    onChange={(e) => setNewCapBoat(e.target.value)}
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.6)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      color: '#f8fafc',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                <button
+                  className="btn-primary"
+                  onClick={handleOnboardCaptain}
+                  style={{
+                    padding: '10px 20px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'var(--accent-color, #a8ff35)',
+                    color: '#050507',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Onboard Captain
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             {/* Active Itinerary Bookings & Boat Captains Assignment */}
             <div className="glass-card fade-in-entry stagger-5" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
@@ -3258,7 +3372,7 @@ function App() {
                               value={b.captain_id || ''}
                               onChange={(e) => handleAssignCaptain(b._id, e.target.value)}
                               style={{
-                                background: 'rgba(15, 23, 42, 0.6)',
+                                background: '#1e293b',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '8px',
                                 padding: '8px 12px',
@@ -3268,15 +3382,15 @@ function App() {
                                 cursor: 'pointer'
                               }}
                             >
-                              <option value="">-- Unassigned --</option>
+                              <option value="" style={{ background: '#1e293b', color: '#f8fafc' }}>-- Unassigned --</option>
                               {captains.map(c => (
-                                <option key={c._id} value={c._id}>{c.name} ({c.boat})</option>
+                                <option key={c._id} value={c._id} style={{ background: '#1e293b', color: '#f8fafc' }}>{c.name} ({c.boat || 'Water Taxi'})</option>
                               ))}
                               {captains.length === 0 && (
                                 <>
-                                  <option value="cap1">Captain Luis (La Estrella)</option>
-                                  <option value="cap2">Captain Marco (Isla Bonita)</option>
-                                  <option value="cap3">Captain Rosa (Coral Queen)</option>
+                                  <option value="cap1" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Luis (La Estrella)</option>
+                                  <option value="cap2" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Marco (Isla Bonita)</option>
+                                  <option value="cap3" style={{ background: '#1e293b', color: '#f8fafc' }}>Captain Rosa (Coral Queen)</option>
                                 </>
                               )}
                             </select>

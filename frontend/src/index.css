@@ -987,5 +987,24 @@ body {
     display: none !important;
   }
 }
+@keyframes qwen-pulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.6;
+    box-shadow: 0 0 0 0 rgba(62, 205, 198, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    box-shadow: 0 0 0 6px rgba(62, 205, 198, 0);
+  }
+  100% {
+    transform: scale(0.92);
+    opacity: 0.6;
+    box-shadow: 0 0 0 0 rgba(62, 205, 198, 0);
+  }
+}
 
-
+.qwen-pulse-dot {
+  animation: qwen-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

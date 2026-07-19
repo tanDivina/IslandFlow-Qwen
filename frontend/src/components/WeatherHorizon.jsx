@@ -61,7 +61,44 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
 
   const currentL = labels[lang] || labels.en;
 
-  const getWeatherVisuals = (weather) => {
+  const getWeatherVisuals = (weather, customTemp, dateStr) => {
+    let displayTemp = "";
+    if (customTemp !== undefined && customTemp !== null) {
+      const c = Math.round(customTemp);
+      const f = Math.round(c * 9 / 5 + 32);
+      displayTemp = `${c}°C / ${f}°F`;
+    } else {
+      // Deterministic slight variation based on dateStr length / hash so it's not identical across days
+      let variation = 0;
+      if (dateStr) {
+        let hash = 0;
+        for (let i = 0; i < dateStr.length; i++) {
+          hash += dateStr.charCodeAt(i);
+        }
+        variation = (hash % 5) - 2; // -2 to +2
+      }
+      
+      switch (weather) {
+        case 'Heavy Rain':
+          const baseHR = 26 + variation * 0.4;
+          displayTemp = `${Math.round(baseHR)}°C / ${Math.round(baseHR * 9/5 + 32)}°F`;
+          break;
+        case 'Rainy':
+          const baseR = 27 + variation * 0.4;
+          displayTemp = `${Math.round(baseR)}°C / ${Math.round(baseR * 9/5 + 32)}°F`;
+          break;
+        case 'Cloudy':
+          const baseC = 29 + variation * 0.4;
+          displayTemp = `${Math.round(baseC)}°C / ${Math.round(baseC * 9/5 + 32)}°F`;
+          break;
+        case 'Sunny':
+        default:
+          const baseS = 31 + variation * 0.4;
+          displayTemp = `${Math.round(baseS)}°C / ${Math.round(baseS * 9/5 + 32)}°F`;
+          break;
+      }
+    }
+
     switch (weather) {
       case 'Heavy Rain':
         return {
@@ -75,7 +112,7 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
           border: 'rgba(99, 102, 241, 0.15)',
           label: lang === 'es' ? 'Alerta de Tormenta' : 'Storm Alert',
           displayWeather: lang === 'es' ? 'Tormenta' : 'Heavy Rain',
-          temp: '26°C / 79°F',
+          temp: displayTemp,
           textColor: '#4f46e5'
         };
       case 'Rainy':
@@ -90,7 +127,7 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
           border: 'rgba(59, 130, 246, 0.2)',
           label: lang === 'es' ? 'Lluvia Tropical' : 'Tropical Rain',
           displayWeather: lang === 'es' ? 'Lluvioso' : 'Rainy',
-          temp: '27°C / 81°F',
+          temp: displayTemp,
           textColor: '#2563eb'
         };
       case 'Cloudy':
@@ -104,7 +141,7 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
           border: 'rgba(148, 163, 184, 0.2)',
           label: lang === 'es' ? 'Nublado / Cubierto' : 'Overcast',
           displayWeather: lang === 'es' ? 'Nublado' : 'Cloudy',
-          temp: '29°C / 84°F',
+          temp: displayTemp,
           textColor: '#475569'
         };
       case 'Sunny':
@@ -127,7 +164,7 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
           border: 'rgba(212, 175, 55, 0.15)',
           label: lang === 'es' ? 'Paraíso Perfecto' : 'Perfect Paradise',
           displayWeather: lang === 'es' ? 'Soleado' : 'Sunny',
-          temp: '31°C / 88°F',
+          temp: displayTemp,
           textColor: '#b45309'
         };
     }
@@ -214,7 +251,7 @@ export default function WeatherHorizon({ logistics, lang = 'en' }) {
         className="hide-scrollbar"
       >
         {dates.map((day, idx) => {
-          const visuals = getWeatherVisuals(day.weather);
+          const visuals = getWeatherVisuals(day.weather, day.temp, day.date);
           const isWarning = day.weather === 'Heavy Rain' || day.weather === 'Rainy';
           const waveHeight = typeof day.wave_height === 'number' ? day.wave_height : 0.6;
           const isDangerWave = waveHeight > 1.5;

@@ -11,7 +11,7 @@ import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from dotenv import load_dotenv
 
 from db import db, is_real_mongo, get_conversational_memories, save_conversational_memory
@@ -391,14 +391,35 @@ async def sync_live_weather():
                 elif "wave_warning" not in alert_status:
                     alert_status = f"{alert_status}+wave_warning"
             
+            # Calculate average temperature of the day if points are available
+            avg_temp = None
+            if day_points:
+                temps = [p.get("temp") for p in day_points if p.get("temp") is not None]
+                if temps:
+                    avg_temp = sum(temps) / len(temps)
+            
+            update_data = {
+                "weather": weather_status,
+                "alert": alert_status,
+                "wave_height": max_wave,
+                "wave_status": wave_status
+            }
+            if avg_temp is not None:
+                update_data["temp"] = round(avg_temp, 1)
+            else:
+                # Fallback temperature based on weather type
+                if weather_status == "Heavy Rain":
+                    update_data["temp"] = 25.8
+                elif weather_status == "Rainy":
+                    update_data["temp"] = 27.2
+                elif weather_status == "Cloudy":
+                    update_data["temp"] = 28.8
+                else:
+                    update_data["temp"] = 31.4
+
             db["logistics"].update_one(
                 {"date": date},
-                {"$set": {
-                    "weather": weather_status,
-                    "alert": alert_status,
-                    "wave_height": max_wave,
-                    "wave_status": wave_status
-                }}
+                {"$set": update_data}
             )
             
             # Automatically trigger reschedule proposal loop for affected guests
@@ -456,9 +477,10 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
         tenants = list(db["tenants"].find({}))
         dispatches = list(db["dispatches"].find({}))
         captain_notifications = list(db["captain_notifications"].find({}))
+        captains = list(db["captains"].find({}))
         
         # Clean mongo ObjectId to string for JSON serialization
-        for collection in [tours, bookings, guests, logistics, tenants, dispatches, captain_notifications]:
+        for collection in [tours, bookings, guests, logistics, tenants, dispatches, captain_notifications, captains]:
             for doc in collection:
                 if "_id" in doc:
                     doc["_id"] = str(doc["_id"])
@@ -506,6 +528,7 @@ async def get_status(guest_id: str = "g1", token: str = None, secure: bool = Fal
             "tenants": tenants,
             "dispatches": dispatches,
             "captain_notifications": captain_notifications,
+            "captains": captains,
             "itinerary_markdown": itinerary_md,
             "tenant_brand": tenant_brand,
             "secure_token_active": token_valid,
@@ -600,13 +623,24 @@ async def simulate_weather(payload: WeatherSimulationPayload):
                 wave_h = 0.6
         wave_status = "dangerous" if wave_h > 1.5 else "safe"
         
+        # Determine simulated temperature
+        if payload.weather == "Heavy Rain":
+            sim_temp = 25.8
+        elif payload.weather == "Rainy":
+            sim_temp = 27.2
+        elif payload.weather == "Cloudy":
+            sim_temp = 28.8
+        else:
+            sim_temp = 31.4
+
         db["logistics"].update_one(
             {"date": payload.date},
             {"$set": {
                 "weather": payload.weather,
                 "alert": payload.alert,
                 "wave_height": wave_h,
-                "wave_status": wave_status
+                "wave_status": wave_status,
+                "temp": sim_temp
             }}
         )
         logger.info(f"Simulated weather updated for {payload.date}: {payload.weather} (Alert: {payload.alert}, Waves: {wave_h}m)")
@@ -659,13 +693,24 @@ async def update_weather_api(payload: WeatherUpdatePayload):
                 wave_h = 0.6
         wave_status = "dangerous" if wave_h > 1.5 else "safe"
         
+        # Determine simulated temperature
+        if payload.weather == "Heavy Rain":
+            sim_temp = 25.8
+        elif payload.weather == "Rainy":
+            sim_temp = 27.2
+        elif payload.weather == "Cloudy":
+            sim_temp = 28.8
+        else:
+            sim_temp = 31.4
+
         db["logistics"].update_one(
             {"date": payload.date},
             {"$set": {
                 "weather": payload.weather,
                 "alert": payload.alert,
                 "wave_height": wave_h,
-                "wave_status": wave_status
+                "wave_status": wave_status,
+                "temp": sim_temp
             }},
             upsert=True
         )
@@ -981,6 +1026,32 @@ async def add_tour(payload: AddTourPayload):
         }
     except Exception as e:
         logger.error(f"Error adding custom tour: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+class AddCaptainPayload(BaseModel):
+    name: str
+    boat: str
+    size: Optional[str] = "medium"
+    weather_fit: Optional[List[str]] = None
+
+@app.post("/api/operator/add-captain")
+async def add_captain(payload: AddCaptainPayload):
+    """Add a new boat captain dynamically to the MongoDB collection."""
+    try:
+        new_id = f"cap_{int(time.time())}"
+        captain_doc = {
+            "_id": new_id,
+            "name": payload.name,
+            "boat": payload.boat,
+            "vessel": payload.boat,  # vessel for database compatibility
+            "size": payload.size or "medium",
+            "weather_fit": payload.weather_fit or ["calm"]
+        }
+        db["captains"].insert_one(captain_doc)
+        logger.info(f"Dynamically added new Captain: {payload.name} with boat {payload.boat}")
+        return {"status": "success", "captain_id": new_id, "captain": captain_doc}
+    except Exception as e:
+        logger.error(f"Error adding captain: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Captain Portal and Operator Assignment Payloads & Endpoints

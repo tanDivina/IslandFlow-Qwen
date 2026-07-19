@@ -465,10 +465,10 @@ def get_logistics_data(dates):
     ]
 
 CAPTAINS_CATALOG = [
-    {"_id": "c1", "name": "Capitán Jose", "vessel": "Panga Blanca", "size": "small", "weather_fit": ["calm"]},
-    {"_id": "c2", "name": "Capitán Mateo", "vessel": "Aqua Express", "size": "large", "weather_fit": ["calm", "rough", "extreme"]},
-    {"_id": "c3", "name": "Capitán Carlos", "vessel": "Mar Azul", "size": "small", "weather_fit": ["calm"]},
-    {"_id": "c4", "name": "Capitán Eduardo", "vessel": "Bocas Explorer", "size": "large", "weather_fit": ["calm", "rough", "extreme"]}
+    {"_id": "cap1", "name": "Capitán Luis", "boat": "La Estrella", "vessel": "La Estrella", "size": "small", "weather_fit": ["calm"]},
+    {"_id": "cap2", "name": "Capitán Marco", "boat": "Isla Bonita", "vessel": "Isla Bonita", "size": "medium", "weather_fit": ["calm", "rough"]},
+    {"_id": "cap3", "name": "Capitán Rosa", "boat": "Coral Queen", "vessel": "Coral Queen", "size": "large", "weather_fit": ["calm", "rough", "extreme"]},
+    {"_id": "cap4", "name": "Capitán Eduardo", "boat": "Bocas Explorer", "vessel": "Bocas Explorer", "size": "large", "weather_fit": ["calm", "rough", "extreme"]}
 ]
 
 def get_tenants_data():
