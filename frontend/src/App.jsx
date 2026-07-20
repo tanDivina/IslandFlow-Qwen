@@ -2809,106 +2809,108 @@ function App() {
 
       {/* Render Guest Portal View */}
       {view === 'guest' && (
-        <div className={`guest-portal-wrapper show-${mobileTab}`} style={{ width: '100%' }}>
-          {/* Mobile Glass Tabs */}
-          <div className="guest-mobile-tabs">
-            <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
-              <button 
-                className={`guest-mobile-tab-btn ${mobileTab === 'chat' ? 'active' : ''}`}
-                onClick={() => setMobileTab('chat')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                {lang === 'es' ? 'Asistente Chat' : 'Chat Concierge'}
-              </button>
-            </Magnet>
-            <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
-              <button 
-                className={`guest-mobile-tab-btn ${mobileTab === 'itinerary' ? 'active' : ''}`}
-                onClick={() => setMobileTab('itinerary')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                {lang === 'es' ? 'Mi Itinerario' : 'My Itinerary'}
-              </button>
-            </Magnet>
-          </div>
-
-          <div className="main-grid">
-            <div className="guest-col-schedule" style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
-              <div className="fade-in-entry stagger-1">
-                <WeatherHorizon logistics={logistics} lang={lang} />
-              </div>
-              <div className="fade-in-entry stagger-2">
-                <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} lang={lang} />
-              </div>
-              <div className="fade-in-entry stagger-3">
-                <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
-              </div>
-              
-              {/* Urgent Human Front Desk Emergency Assistance Card */}
-              <div className="glass-card fade-in-entry stagger-4" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>
-                      {lang === 'es' ? '¿Necesita Asistencia de Recepción?' : 'Need Immediate Human Assistance?'}
-                    </h4>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>
-                      {lang === 'es' ? 'Si tiene inconvenientes con su viaje o una emergencia, llame directo a Recepción 24/7.' : 'If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.'}
-                    </p>
-                  </div>
-                </div>
-                <a 
-                  href="tel:+50766554433" 
-                  style={{ 
-                    padding: '10px 18px', 
-                    fontSize: '0.82rem', 
-                    textDecoration: 'none', 
-                    background: '#ef4444', 
-                    color: '#ffffff', 
-                    border: 'none', 
-                    borderRadius: '10px', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '8px', 
-                    fontWeight: 600,
-                    boxShadow: 'none',
-                    whiteSpace: 'nowrap',
-                    transition: 'background 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+        <ErrorBoundary onReset={() => navigateToView('landing')}>
+          <div className={`guest-portal-wrapper show-${mobileTab}`} style={{ width: '100%' }}>
+            {/* Mobile Glass Tabs */}
+            <div className="guest-mobile-tabs">
+              <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
+                <button 
+                  className={`guest-mobile-tab-btn ${mobileTab === 'chat' ? 'active' : ''}`}
+                  onClick={() => setMobileTab('chat')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
                 >
-                  Call
-                </a>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  {lang === 'es' ? 'Asistente Chat' : 'Chat Concierge'}
+                </button>
+              </Magnet>
+              <Magnet style={{ flex: 1, display: 'flex' }} strength={12} padding={25}>
+                <button 
+                  className={`guest-mobile-tab-btn ${mobileTab === 'itinerary' ? 'active' : ''}`}
+                  onClick={() => setMobileTab('itinerary')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  {lang === 'es' ? 'Mi Itinerario' : 'My Itinerary'}
+                </button>
+              </Magnet>
+            </div>
+
+            <div className="main-grid">
+              <div className="guest-col-schedule" style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0, viewTransitionName: 'schedule-view' }}>
+                <div className="fade-in-entry stagger-1">
+                  <WeatherHorizon logistics={logistics} lang={lang} />
+                </div>
+                <div className="fade-in-entry stagger-2">
+                  <ScheduleView bookings={bookings} tours={tours} logistics={logistics} guestId={guestId} lang={lang} />
+                </div>
+                <div className="fade-in-entry stagger-3">
+                  <ItineraryDoc itineraryMarkdown={itineraryMarkdown} guestId={guestId} />
+                </div>
+                
+                {/* Urgent Human Front Desk Emergency Assistance Card */}
+                <div className="glass-card fade-in-entry stagger-4" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexShrink: 0, border: '1px solid rgba(239, 68, 68, 0.15)', boxShadow: 'var(--shadow-sm)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', flexShrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: '0.88rem', fontWeight: 650, margin: 0, color: 'var(--text-primary)' }}>
+                        {lang === 'es' ? '¿Necesita Asistencia de Recepción?' : 'Need Immediate Human Assistance?'}
+                      </h4>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: 300 }}>
+                        {lang === 'es' ? 'Si tiene inconvenientes con su viaje o una emergencia, llame directo a Recepción 24/7.' : 'If you are facing travel disruptions or emergencies, call our 24/7 Front Desk directly.'}
+                      </p>
+                    </div>
+                  </div>
+                  <a 
+                    href="tel:+50766554433" 
+                    style={{ 
+                      padding: '10px 18px', 
+                      fontSize: '0.82rem', 
+                      textDecoration: 'none', 
+                      background: '#ef4444', 
+                      color: '#ffffff', 
+                      border: 'none', 
+                      borderRadius: '10px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      fontWeight: 600,
+                      boxShadow: 'none',
+                      whiteSpace: 'nowrap',
+                      transition: 'background 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                  >
+                    Call
+                  </a>
+                </div>
+              </div>
+              <div className="guest-col-chat fade-in-entry stagger-5" style={{ viewTransitionName: 'chat-widget', position: 'sticky', top: '24px', alignSelf: 'start' }}>
+                <ChatWidget 
+                  messages={messages} 
+                  onSendMessage={handleSendMessage} 
+                  onRespondProposal={handleRespondProposal} 
+                  loading={loading}
+                  bookings={bookings}
+                  tenantBrand={tenantBrand}
+                  tours={tours}
+                  logistics={logistics}
+                />
               </div>
             </div>
-            <div className="guest-col-chat fade-in-entry stagger-5" style={{ viewTransitionName: 'chat-widget', position: 'sticky', top: '24px', alignSelf: 'start' }}>
-              <ChatWidget 
-                messages={messages} 
-                onSendMessage={handleSendMessage} 
-                onRespondProposal={handleRespondProposal} 
-                loading={loading}
-                bookings={bookings}
-                tenantBrand={tenantBrand}
-                tours={tours}
-                logistics={logistics}
-              />
-            </div>
           </div>
-        </div>
+        </ErrorBoundary>
       )}
 
       {/* Render Operator Console View */}
