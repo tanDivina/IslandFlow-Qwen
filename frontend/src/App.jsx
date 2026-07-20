@@ -2163,10 +2163,10 @@ function App() {
                           <polyline points="13 11 9 17 12 17 10 23" />
                         </svg>
                       </div>
-                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Simulate Severe Storm</h4>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Severe Storm Detected</h4>
                     </div>
                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The operator triggers a "Heavy Rain" weather alert via the operator panel. Qwen immediately intercepts this safety hazard.
+                      The live weather API detects severe storm conditions (e.g. heavy rain or high winds). Qwen immediately intercepts this safety hazard.
                     </p>
                     <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
                       <span style={{ color: '#0ea5e9', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Telemetry Stream:</span>
