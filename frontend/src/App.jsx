@@ -1844,204 +1844,8 @@ function App() {
             </p>
           </div>
 
-          {/* Operational Playbooks & Interactive Flow Mappings */}
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto 48px auto',
-            padding: '0 16px',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
-              Operational Playbooks & Workflow Routes
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '680px', margin: '0 auto 28px auto', lineHeight: '1.5' }}>
-              How does the digital eco-tourism coordinator sync? Choose a playbook route below to trace the complete step-by-step transaction flow, showing both guest-initiated and hotel-initiated operations.
-            </p>
 
-            {/* Toggle tabs */}
-            <div style={{
-              display: 'inline-flex',
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '30px',
-              padding: '4px',
-              marginBottom: '32px',
-              gap: '4px'
-            }}>
-              <button 
-                onClick={() => setActivePlaybookRoute('guest')}
-                style={{
-                  padding: '10px 24px',
-                  borderRadius: '26px',
-                  border: 'none',
-                  background: activePlaybookRoute === 'guest' ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
-                  border: `1px solid ${activePlaybookRoute === 'guest' ? 'var(--primary)' : 'transparent'}`,
-                  color: activePlaybookRoute === 'guest' ? 'var(--primary)' : 'var(--text-muted)',
-                  fontSize: '0.82rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                Route A: Guest-Initiated Inbound
-              </button>
-              <button 
-                onClick={() => setActivePlaybookRoute('hotel')}
-                style={{
-                  padding: '10px 24px',
-                  borderRadius: '26px',
-                  border: 'none',
-                  background: activePlaybookRoute === 'hotel' ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
-                  border: `1px solid ${activePlaybookRoute === 'hotel' ? 'var(--primary)' : 'transparent'}`,
-                  color: activePlaybookRoute === 'hotel' ? 'var(--primary)' : 'var(--text-muted)',
-                  fontSize: '0.82rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-                Route B: Hotel-Initiated Outbound
-              </button>
-            </div>
 
-            {/* Playbook Content */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '20px',
-              textAlign: 'left'
-            }}>
-              {activePlaybookRoute === 'guest' ? (
-                <>
-                  {/* Step 1 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 1</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🔑 Guest Accesses Portal
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The guest checks in or lands at the resort, and scans their room welcome QR flyer or taps the Magic Link in their booking confirmation.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Action:</strong> Enter the Guest Portal from the selection card below.
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 2</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      💬 Ask AI Concierge
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The guest starts talking to the AI Concierge, typing custom questions like: <em>"Can we schedule a snorkeling trip to Coral Cay for tomorrow morning?"</em>
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Qwen Loop:</strong> The agent receives the question with background guest memory pre-loaded.
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 3</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🛠️ Autonomous Tool Call
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      Qwen analyzes current weather forecasts, available time slots, and books the tour directly by invoking the secure <code>add_booking</code> function.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Database Sync:</strong> Saves directly to MongoDB Atlas, locking in the booking.
-                    </div>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 4</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🏝️ Real-Time UI Updates
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The guest's timeline immediately updates to show the snorkeling trip. They can instantly generate and print a physical PDF receipt.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Dispatch:</strong> The captain's manifest is updated with the guest details automatically.
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Step 1 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 1</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🏨 Front Desk Setup
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The hotel operator registers guests, maps available captains/boats, and schedules pre-arrival water-shuttles.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Console Action:</strong> Done in the Operator Console dashboard.
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 2</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      ⛈️ Simulate Severe Storm
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The operator triggers a "Heavy Rain" weather alert via the operator panel. Qwen immediately intercepts this safety hazard.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Telemetry Stream:</strong> Red alert is broadcast to both operator and captain screens.
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 3</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      ✉️ Previews & Alerts Sent
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      Qwen drafts a personalized, brand-tailored, responsive HTML email recommending safe alternative indoor activities (like the Bocas Museum Tour).
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Notification:</strong> The operator sends the WhatsApp alert or HTML email with 1 click.
-                    </div>
-                  </div>
-
-                  {/* Step 4 */}
-                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 4</div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      🤝 1-Tap Resolution
-                    </h4>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                      The guest opens their portal link, reviews the interactive alternative, and clicks "Approve Alternative Tour". Qwen commits the swap to MongoDB instantly.
-                    </p>
-                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      <strong>Closed-Loop:</strong> Dispatch manifests auto-update on the captain's mobile PWA.
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
 
           {/* Role selection Cards */}
           {/* Role selection Cards */}
@@ -2147,110 +1951,277 @@ function App() {
             </div>
           </div>
 
-          {/* Real-World Dispatch & PWA Onboarding Workflow Guide */}
+          {/* Operational Playbooks & Interactive Flow Mappings */}
           <div className="landing-features" style={{ marginTop: '50px', borderTop: '1px solid var(--border-color)', paddingTop: '40px' }}>
-            <h3 className="section-title">Real-World Dispatch & Onboarding Workflow Guide</h3>
+            <h3 className="section-title">Operational Playbooks & Workflow Routes</h3>
             <p className="landing-intro" style={{ maxWidth: '750px', margin: '-10px auto 40px auto', fontSize: '0.95rem' }}>
-              Designed for luxury overwater resorts (like Nayara Bocas or La Coralina). This guide illustrates how hotels onboard staff, how boat captains install the app in seconds, and how guests stay synced.
+              How does the digital eco-tourism coordinator sync? Choose a playbook route below to trace the complete step-by-step transaction flow, showing both guest-initiated and hotel-initiated operations.
             </p>
 
+            {/* Toggle tabs */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              width: '100%',
+              marginBottom: '32px'
+            }}>
+              <div style={{
+                display: 'inline-flex',
+                background: 'rgba(0, 0, 0, 0.02)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '30px',
+                padding: '4px',
+                gap: '4px'
+              }}>
+                <button 
+                  onClick={() => setActivePlaybookRoute('guest')}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '26px',
+                    border: 'none',
+                    background: activePlaybookRoute === 'guest' ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                    border: `1px solid ${activePlaybookRoute === 'guest' ? 'var(--primary)' : 'transparent'}`,
+                    color: activePlaybookRoute === 'guest' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Route A: Guest-Initiated Inbound
+                </button>
+                <button 
+                  onClick={() => setActivePlaybookRoute('hotel')}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '26px',
+                    border: 'none',
+                    background: activePlaybookRoute === 'hotel' ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                    border: `1px solid ${activePlaybookRoute === 'hotel' ? 'var(--primary)' : 'transparent'}`,
+                    color: activePlaybookRoute === 'hotel' ? 'var(--text-primary)' : 'var(--text-muted)',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 2.1l4 4-4 4" />
+                    <path d="M3 12.2v-2a4 4 0 0 1 4-4h14" />
+                    <path d="M7 21.9l-4-4 4-4" />
+                    <path d="M21 11.8v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  Route B: Hotel-Initiated Outbound
+                </button>
+              </div>
+            </div>
+
+            {/* Playbook Content */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: '24px',
+              gap: '20px',
               maxWidth: '1200px',
               margin: '0 auto',
               textAlign: 'left'
             }}>
-              {/* Step 1: Hotel Operator Setup */}
-              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#3ecdc6', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
-                  STEP 1
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                  <div style={{ color: 'var(--accent, #3ecdc6)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <line x1="9" y1="3" x2="9" y2="21" />
-                    </svg>
+              {activePlaybookRoute === 'guest' ? (
+                <>
+                  {/* Step 1 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#3ecdc6', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 1
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#3ecdc6' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Guest Accesses Portal</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest checks in or lands at the resort, and scans their room welcome QR flyer or taps the Magic Link in their booking confirmation.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#3ecdc6', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
+                      Enter the Guest Portal from the selection card below.
+                    </div>
                   </div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Hotel Desk Dispatch</h4>
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                  The front desk operator logs into the <strong>Operator Console</strong>, defines boat capacities, and maps local captains. 
-                </p>
-                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
-                  <span style={{ color: 'var(--accent, #3ecdc6)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  Sync guest details, assign a boat/captain, and click <strong>"Print Welcome Flyer"</strong> to produce a personalized card with a secure room check-in QR code.
-                </div>
-              </div>
 
-              {/* Step 2: Boat Captain Mobile PWA */}
-              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#0ea5e9', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
-                  STEP 2
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                  <div style={{ color: 'var(--primary)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
+                  {/* Step 2 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#0ea5e9', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 2
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#0ea5e9' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Ask AI Concierge</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest starts talking to the AI Concierge, typing custom questions like: <em>"Can we schedule a snorkeling trip to Coral Cay for tomorrow morning?"</em>
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#0ea5e9', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Qwen Loop:</span>
+                      The agent receives the question with background guest memory pre-loaded.
+                    </div>
                   </div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Captain PWA Install</h4>
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                  Captains don't need App Store downloads! They open the URL on mobile or scan a setup code, then tap <strong>"Add to Home Screen"</strong> for full PWA integration.
-                </p>
-                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
-                  <span style={{ color: 'var(--primary)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  Open Captain Portal, tap install, select preferred language (<strong>Bilingual Switcher 🇪🇸 / 🇬🇧</strong>), accept dispatches, and log real-time sea swell reports.
-                </div>
-              </div>
 
-              {/* Step 3: Guest Mobile Companion */}
-              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#a855f7', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
-                  STEP 3
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                  <div style={{ color: '#a855f7' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                      <line x1="12" y1="18" x2="12.01" y2="18" />
-                    </svg>
+                  {/* Step 3 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#a855f7', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 3
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#a855f7' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Autonomous Tool Call</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      Qwen analyzes current weather forecasts, available time slots, and books the tour directly by invoking the secure <code>add_booking</code> function.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#a855f7', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Database Sync:</span>
+                      Saves directly to MongoDB Atlas, locking in the booking.
+                    </div>
                   </div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Guest Activation</h4>
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                  Guests scan the room welcome QR code on their device. The secure token authorizes their timeline and skins the interface with the resort's brand.
-                </p>
-                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
-                  <span style={{ color: '#a855f7', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  View active schedule, chat instantly with our Qwen concierge, request tour booking extensions, and add custom timeline markers offline.
-                </div>
-              </div>
 
-              {/* Step 4: Closed-Loop Weather Swaps */}
-              <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-                <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#f59e0b', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
-                  STEP 4
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
-                  <div style={{ color: 'var(--warning, #f59e0b)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 8.58" />
-                    </svg>
+                  {/* Step 4 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#f59e0b', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 4
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#f59e0b' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <line x1="3" y1="9" x2="21" y2="9" />
+                          <line x1="9" y1="21" x2="9" y2="9" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Real-Time UI Updates</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest's timeline immediately updates to show the snorkeling trip. They can instantly generate and print a physical PDF receipt.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#f59e0b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Dispatch:</span>
+                      The captain's manifest is updated with the guest details automatically.
+                    </div>
                   </div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Bilingual Closed Loop</h4>
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                  A closed-loop dispatch ecosystem. If captains broadcast an English/Spanish weather warning, dispatches re-route immediately.
-                </p>
-                <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
-                  <span style={{ color: 'var(--warning, #f59e0b)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Operational Action:</span>
-                  Captains flag unsafe seas (in Spanish) &rarr; Front desk monitors live alerts &rarr; Qwen backend drafts reschedules &rarr; Guest confirms swap in 1-tap.
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  {/* Step 1 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#3ecdc6', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 1
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#3ecdc6' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-4.27 4a2 2 0 0 1-3.46 0" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Front Desk Setup</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The hotel operator registers guests, maps available captains/boats, and schedules pre-arrival water-shuttles.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#3ecdc6', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Console Action:</span>
+                      Done in the Operator Console dashboard.
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#0ea5e9', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 2
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#0ea5e9' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 8.58" />
+                          <polyline points="13 11 9 17 12 17 10 23" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Simulate Severe Storm</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The operator triggers a "Heavy Rain" weather alert via the operator panel. Qwen immediately intercepts this safety hazard.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#0ea5e9', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Telemetry Stream:</span>
+                      Red alert is broadcast to both operator and captain screens.
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#a855f7', color: '#ffffff', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 3
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#a855f7' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Previews & Alerts Sent</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      Qwen drafts a personalized, brand-tailored, responsive HTML email recommending safe alternative indoor activities (like the Bocas Museum Tour).
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#a855f7', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Notification:</span>
+                      The operator sends the WhatsApp alert or HTML email with 1 click.
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="glass-card" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div style={{ position: 'absolute', top: '-12px', left: '20px', background: '#f59e0b', color: '#000000', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>
+                      STEP 4
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <div style={{ color: '#f59e0b' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                          <circle cx="8.5" cy="7" r="4" />
+                          <polyline points="17 11 19 13 23 9" />
+                        </svg>
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>1-Tap Resolution</h4>
+                    </div>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest opens their portal link, reviews the interactive alternative, and clicks "Approve Alternative Tour". Qwen commits the swap to MongoDB instantly.
+                    </p>
+                    <div style={{ background: 'var(--bg-card-nested)', padding: '10px 12px', borderRadius: '8px', fontSize: '0.75rem', border: '1px solid var(--border-color)' }}>
+                      <span style={{ color: '#f59e0b', fontWeight: '600', display: 'block', marginBottom: '2px' }}>Closed-Loop:</span>
+                      Dispatch manifests auto-update on the captain's mobile PWA.
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="landing-features">
@@ -2309,6 +2280,46 @@ function App() {
                   <div className="feature-title">Live MongoDB Atlas Transactions</div>
                 </div>
                 <div className="feature-desc">Transactions are safely committed back to MongoDB Atlas, accurately adjusting available slots and creating official itinerary receipts.</div>
+              </div>
+              <div className="glass-card feature-item">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="feature-icon-wrapper">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <rect x="7" y="7" width="3" height="3" />
+                      <rect x="14" y="7" width="3" height="3" />
+                      <rect x="7" y="14" width="3" height="3" />
+                      <path d="M14 14h3v3h-3z" />
+                    </svg>
+                  </div>
+                  <div className="feature-title">Secure QR-Code Activation</div>
+                </div>
+                <div className="feature-desc">Instant credentials-free login. Guests scan a physical welcome flyer in their room to securely authorize their portal and load personal check-in memories.</div>
+              </div>
+              <div className="glass-card feature-item">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="feature-icon-wrapper">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                      <path d="M12 6v6m0 0l-3-3m3 3l3-3" />
+                    </svg>
+                  </div>
+                  <div className="feature-title">Zero-Install Captain PWA</div>
+                </div>
+                <div className="feature-desc">Pin to mobile home screens in seconds without App Store gatekeepers. Runs smoothly offline with high-performance persistent cache manifest synchronization.</div>
+              </div>
+              <div className="glass-card feature-item">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="feature-icon-wrapper">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      <path d="M10 8h.01M14 8h.01M10 12h4" />
+                    </svg>
+                  </div>
+                  <div className="feature-title">Bilingual Marine Dispatch</div>
+                </div>
+                <div className="feature-desc">Seamless English-Spanish translation bridge. Captains report sea conditions in Spanish, while hotel operators and guests receive real-time translated schedules.</div>
               </div>
             </div>
           </div>
@@ -2988,6 +2999,10 @@ function App() {
                   {
                     q: "Can we add new boat captains and manage bookings?",
                     a: "Absolutely! Resort front desk teams can access the **Operator Console** to register new boat captains, configure maximum boat capacities, view active manifests, and monitor real-time weather logs broadcasted by marine providers. New captains instantly receive their private PWA links to begin logging sea conditions."
+                  },
+                  {
+                    q: "How do boat captains install and use the mobile Progressive Web App (PWA)?",
+                    a: "Our PWA bypasses the friction of App Store downloads:\n\n1. **Onboarding**: The operator registers the captain in the Operator Console, which generates a unique private URL link.\n2. **Installation**: Captains scan their setup code or open the link on Safari or Chrome, then tap **\"Add to Home Screen\"** to instantly place the IslandFlow icon on their device.\n3. **Operation**: Once installed, captains can toggle languages on our bilingual switcher (🇪🇸 / 🇬🇧), accept dispatch manifests, and broadcast sea condition/swell alerts directly to the resort coordinator."
                   }
                 ].map((faq, idx) => {
                   const isOpen = activeFaqIndex === idx;
