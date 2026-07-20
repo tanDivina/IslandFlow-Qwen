@@ -32,6 +32,23 @@ const getInitialParams = () => {
   
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   
+  // SUPPORT FOR SHORT ROUTE PATHWAYS /p, /p/<guest_id>, /p/<token>
+  const path = window.location.pathname;
+  if (path === '/p' || path.startsWith('/p/')) {
+    const segment = path.substring(3).trim(); // gets anything after "/p/"
+    const activeToken = urlToken || (segment && segment.length >= 10 ? segment : null);
+    const activeGuestId = urlGuestId || (segment && segment.length < 10 && segment.length > 0 ? segment : 'g1');
+    return { 
+      view: 'guest', 
+      guestId: activeGuestId, 
+      token: activeToken, 
+      secureActive: true, 
+      guestViewOnly: true, 
+      itineraryOnly: urlItineraryOnly, 
+      captainId: 'cap1' 
+    };
+  }
+  
   if (urlCaptainId) {
     return { view: 'captain', guestId: 'g1', token: null, secureActive: false, guestViewOnly: false, itineraryOnly: urlItineraryOnly, captainId: urlCaptainId };
   } else if (urlToken) {
@@ -271,6 +288,7 @@ function App() {
   const [successGuest, setSuccessGuest] = useState(null);
   const [logoErrors, setLogoErrors] = useState({});
   const [activePlaybookRoute, setActivePlaybookRoute] = useState('guest');
+  const [activeFaqIndex, setActiveFaqIndex] = useState(null);
 
   const handleManualCheckInSubmit = async (e) => {
     e.preventDefault();
@@ -2802,6 +2820,252 @@ function App() {
                 )}
 
               </div>
+            </div>
+          </div>
+
+          {/* Interactive Self-Service FAQ & Simulation Guide Section */}
+          <div className="landing-features" style={{ marginTop: '80px', borderTop: '1px solid var(--border-color)', paddingTop: '60px', paddingBottom: '40px' }}>
+            <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)' }}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Self-Service & Simulation FAQ Guide
+            </h3>
+            <p className="landing-intro" style={{ maxWidth: '750px', margin: '-10px auto 40px auto', fontSize: '0.95rem' }}>
+              Want to experience IslandFlow as a real guest or boat captain? Follow this interactive guide to simulate different scenarios, try path-based routing, and understand our technical flow.
+            </p>
+
+            <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Feature Box: Dynamic Path-Based /p/ URL Simulator */}
+              <div className="glass-card" style={{ padding: '24px', background: 'rgba(168, 255, 53, 0.02)', border: '1px solid rgba(168, 255, 53, 0.15)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#a8ff35', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🚀 Instant Path-Based Portal Simulator (`/p`)
+                </h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: '0 0 16px 0' }}>
+                  Our single-page-app now natively supports clean, modern, path-based guest routing! You can instantly pretend to be a guest by appending their ID directly to the path (e.g. <code>/p/g1</code> or <code>/p/g2</code>). Click any of the pre-configured guest links below to open their custom-branded eco-concierge portal:
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+                  <a 
+                    href="/p/g1" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '12px 16px', 
+                      background: 'rgba(255, 255, 255, 0.02)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '8px', 
+                      textDecoration: 'none', 
+                      color: 'var(--text-primary)', 
+                      fontSize: '0.82rem',
+                      fontWeight: '600',
+                      transition: 'all 0.25s' 
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--primary)';
+                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🌴 Nayara Bocas (Guest g1)
+                    </span>
+                    <span style={{ color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Try /p/g1
+                      <svg className="hover-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s' }}>
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </span>
+                  </a>
+
+                  <a 
+                    href="/p/g2" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '12px 16px', 
+                      background: 'rgba(255, 255, 255, 0.02)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '8px', 
+                      textDecoration: 'none', 
+                      color: 'var(--text-primary)', 
+                      fontSize: '0.82rem',
+                      fontWeight: '600',
+                      transition: 'all 0.25s' 
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--primary)';
+                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🏡 La Coralina (Guest g2)
+                    </span>
+                    <span style={{ color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Try /p/g2
+                      <svg className="hover-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s' }}>
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </span>
+                  </a>
+
+                  <a 
+                    href="/p/g3" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="group"
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      padding: '12px 16px', 
+                      background: 'rgba(255, 255, 255, 0.02)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '8px', 
+                      textDecoration: 'none', 
+                      color: 'var(--text-primary)', 
+                      fontSize: '0.82rem',
+                      fontWeight: '600',
+                      transition: 'all 0.25s' 
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--primary)';
+                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🌺 Sweet Bocas (Guest g3)
+                    </span>
+                    <span style={{ color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      Try /p/g3
+                      <svg className="hover-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.3s' }}>
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Collapsible FAQ List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                {[
+                  {
+                    q: "What is the best way to pretend I'm a guest?",
+                    a: "You have two highly seamless methods to simulate guest views: \n\n1. **Sandbox Switcher (Recommended)**: Use the \"DEMO SANDBOX\" banner at the top of the landing page. Select any active guest from the dropdown list and click \"Portal\". This calls our backend API to generate a secure, temporary JWT token and opens a separate secure tab. \n\n2. **Clean Path-Based Routing**: Enter `/p/<guest_id>` directly into your browser's URL bar (such as `http://localhost:5173/p/g1` or `http://localhost:5173/p/g2`). The router instantly handles this subpath, pre-brands the portal for that specific resort, and renders the guest timeline."
+                  },
+                  {
+                    q: "What does the route `/p` represent?",
+                    a: "The `/p` route serves as a concise, user-friendly, and brand-aligned path alias for \"Portal\" or \"Personalized Itinerary\". When guests scan the physical room welcome cards or NFC coasters placed in their villas, they are routed to a clean link like `/p/g2`. This renders their private schedule and real-time chat dashboard instantly, removing cumbersome login forms, username fields, or password prompts."
+                  },
+                  {
+                    q: "How does the weather reschedule loop work?",
+                    a: "1. **Real-time Swell/Wave Updates**: Boat captains use their mobile PWA to log real-time marine wave heights or thunderstorm warnings directly from the sea.\n2. **Intelligent Re-planning Proposal**: The backend detects these alerts and automatically queries guest itineraries. If an outdoor excursion (e.g. Scuba Diving) intersects with dangerous weather, the AI generates a personalized proposal.\n3. **1-Click Approvals**: The guest receives an interactive, high-contrast reschedule card within their chat widget. Tapping \"Accept Reschedule\" safely modifies the database, updates available capacities, and prints a fresh PDF itinerary receipt."
+                  },
+                  {
+                    q: "Can we add new boat captains and manage bookings?",
+                    a: "Absolutely! Resort front desk teams can access the **Operator Console** to register new boat captains, configure maximum boat capacities, view active manifests, and monitor real-time weather logs broadcasted by marine providers. New captains instantly receive their private PWA links to begin logging sea conditions."
+                  }
+                ].map((faq, idx) => {
+                  const isOpen = activeFaqIndex === idx;
+                  return (
+                    <div 
+                      key={idx} 
+                      className="glass-card" 
+                      style={{ 
+                        borderRadius: '10px', 
+                        border: '1px solid var(--border-color)', 
+                        background: 'var(--panel-bg)', 
+                        overflow: 'hidden',
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      <button 
+                        onClick={() => setActiveFaqIndex(isOpen ? null : idx)}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '16px 20px',
+                          background: isOpen ? 'rgba(255, 255, 255, 0.01)' : 'transparent',
+                          border: 'none',
+                          color: isOpen ? 'var(--primary)' : 'var(--text-primary)',
+                          fontSize: '0.88rem',
+                          fontWeight: '650',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ color: isOpen ? 'var(--primary)' : 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '800' }}>Q{idx + 1}.</span>
+                          {faq.q}
+                        </span>
+                        <svg 
+                          width="16" height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          style={{ 
+                            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                            transition: 'transform 0.3s ease',
+                            color: isOpen ? 'var(--primary)' : 'var(--text-muted)'
+                          }}
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+                      <div 
+                        style={{ 
+                          maxHeight: isOpen ? '250px' : '0px', 
+                          opacity: isOpen ? 1 : 0,
+                          overflow: 'hidden',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          padding: isOpen ? '0 20px 20px 20px' : '0 20px',
+                          borderTop: isOpen ? '1px solid var(--border-color)' : 'none',
+                          fontSize: '0.82rem',
+                          color: 'var(--text-muted)',
+                          lineHeight: '1.6',
+                          whiteSpace: 'pre-wrap'
+                        }}
+                      >
+                        <div style={{ marginTop: '12px' }}>
+                          {faq.a}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
             </div>
           </div>
         </div>
