@@ -270,6 +270,7 @@ function App() {
   const [notifiedProviders, setNotifiedProviders] = useState({}); // mapping dispatchId -> 'pending' | 'whatsapp' | 'webhook'
   const [successGuest, setSuccessGuest] = useState(null);
   const [logoErrors, setLogoErrors] = useState({});
+  const [activePlaybookRoute, setActivePlaybookRoute] = useState('guest');
 
   const handleManualCheckInSubmit = async (e) => {
     e.preventDefault();
@@ -1823,6 +1824,205 @@ function App() {
             <p className="landing-intro">
               Moving beyond basic text chat. A dedicated local travel agent that actively manages schedules, monitors live weather conditions, automatically proposes indoor reschedules during storms, and commits verified transactions directly to MongoDB Atlas.
             </p>
+          </div>
+
+          {/* Operational Playbooks & Interactive Flow Mappings */}
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto 48px auto',
+            padding: '0 16px',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px' }}>
+              Operational Playbooks & Workflow Routes
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '680px', margin: '0 auto 28px auto', lineHeight: '1.5' }}>
+              How does the digital eco-tourism coordinator sync? Choose a playbook route below to trace the complete step-by-step transaction flow, showing both guest-initiated and hotel-initiated operations.
+            </p>
+
+            {/* Toggle tabs */}
+            <div style={{
+              display: 'inline-flex',
+              background: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '30px',
+              padding: '4px',
+              marginBottom: '32px',
+              gap: '4px'
+            }}>
+              <button 
+                onClick={() => setActivePlaybookRoute('guest')}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '26px',
+                  border: 'none',
+                  background: activePlaybookRoute === 'guest' ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
+                  border: `1px solid ${activePlaybookRoute === 'guest' ? 'var(--primary)' : 'transparent'}`,
+                  color: activePlaybookRoute === 'guest' ? 'var(--primary)' : 'var(--text-muted)',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Route A: Guest-Initiated Inbound
+              </button>
+              <button 
+                onClick={() => setActivePlaybookRoute('hotel')}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '26px',
+                  border: 'none',
+                  background: activePlaybookRoute === 'hotel' ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
+                  border: `1px solid ${activePlaybookRoute === 'hotel' ? 'var(--primary)' : 'transparent'}`,
+                  color: activePlaybookRoute === 'hotel' ? 'var(--primary)' : 'var(--text-muted)',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                Route B: Hotel-Initiated Outbound
+              </button>
+            </div>
+
+            {/* Playbook Content */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '20px',
+              textAlign: 'left'
+            }}>
+              {activePlaybookRoute === 'guest' ? (
+                <>
+                  {/* Step 1 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 1</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🔑 Guest Accesses Portal
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest checks in or lands at the resort, and scans their room welcome QR flyer or taps the Magic Link in their booking confirmation.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Action:</strong> Enter the Guest Portal from the selection card below.
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 2</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      💬 Ask AI Concierge
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest starts talking to the AI Concierge, typing custom questions like: <em>"Can we schedule a snorkeling trip to Coral Cay for tomorrow morning?"</em>
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Qwen Loop:</strong> The agent receives the question with background guest memory pre-loaded.
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 3</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🛠️ Autonomous Tool Call
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      Qwen analyzes current weather forecasts, available time slots, and books the tour directly by invoking the secure <code>add_booking</code> function.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Database Sync:</strong> Saves directly to MongoDB Atlas, locking in the booking.
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 4</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🏝️ Real-Time UI Updates
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest's timeline immediately updates to show the snorkeling trip. They can instantly generate and print a physical PDF receipt.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Dispatch:</strong> The captain's manifest is updated with the guest details automatically.
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Step 1 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 1</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🏨 Front Desk Setup
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The hotel operator registers guests, maps available captains/boats, and schedules pre-arrival water-shuttles.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Console Action:</strong> Done in the Operator Console dashboard.
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 2</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      ⛈️ Simulate Severe Storm
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The operator triggers a "Heavy Rain" weather alert via the operator panel. Qwen immediately intercepts this safety hazard.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Telemetry Stream:</strong> Red alert is broadcast to both operator and captain screens.
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 3</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      ✉️ Previews & Alerts Sent
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      Qwen drafts a personalized, brand-tailored, responsive HTML email recommending safe alternative indoor activities (like the Bocas Museum Tour).
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Notification:</strong> The operator sends the WhatsApp alert or HTML email with 1 click.
+                    </div>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div className="glass-card" style={{ padding: '20px', position: 'relative', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ position: 'absolute', top: '-10px', left: '16px', background: 'var(--primary)', color: '#000000', fontSize: '10px', fontWeight: '800', padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.05em' }}>STEP 4</div>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      🤝 1-Tap Resolution
+                    </h4>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                      The guest opens their portal link, reviews the interactive alternative, and clicks "Approve Alternative Tour". Qwen commits the swap to MongoDB instantly.
+                    </p>
+                    <div style={{ background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', padding: '8px 10px', borderRadius: '6px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <strong>Closed-Loop:</strong> Dispatch manifests auto-update on the captain's mobile PWA.
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Role selection Cards */}
