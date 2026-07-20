@@ -2840,8 +2840,8 @@ function App() {
             <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               
               {/* Feature Box: Dynamic Path-Based /p/ URL Simulator */}
-              <div className="glass-card" style={{ padding: '24px', background: 'rgba(168, 255, 53, 0.02)', border: '1px solid rgba(168, 255, 53, 0.15)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#a8ff35', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="glass-card" style={{ padding: '24px', background: 'var(--panel-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--primary)', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   🚀 Instant Path-Based Portal Simulator (`/p`)
                 </h4>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: '0 0 16px 0' }}>
@@ -2858,7 +2858,7 @@ function App() {
                       alignItems: 'center', 
                       justifyContent: 'space-between', 
                       padding: '12px 16px', 
-                      background: 'rgba(255, 255, 255, 0.02)', 
+                      background: 'rgba(255, 255, 255, 0.3)', 
                       border: '1px solid var(--border-color)', 
                       borderRadius: '8px', 
                       textDecoration: 'none', 
@@ -2869,11 +2869,11 @@ function App() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--primary)';
-                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                      e.currentTarget.style.background = 'var(--primary-glow)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-color)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
                     }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2898,7 +2898,7 @@ function App() {
                       alignItems: 'center', 
                       justifyContent: 'space-between', 
                       padding: '12px 16px', 
-                      background: 'rgba(255, 255, 255, 0.02)', 
+                      background: 'rgba(255, 255, 255, 0.3)', 
                       border: '1px solid var(--border-color)', 
                       borderRadius: '8px', 
                       textDecoration: 'none', 
@@ -2909,11 +2909,11 @@ function App() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--primary)';
-                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                      e.currentTarget.style.background = 'var(--primary-glow)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-color)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
                     }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2938,7 +2938,7 @@ function App() {
                       alignItems: 'center', 
                       justifyContent: 'space-between', 
                       padding: '12px 16px', 
-                      background: 'rgba(255, 255, 255, 0.02)', 
+                      background: 'rgba(255, 255, 255, 0.3)', 
                       border: '1px solid var(--border-color)', 
                       borderRadius: '8px', 
                       textDecoration: 'none', 
@@ -2949,11 +2949,11 @@ function App() {
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--primary)';
-                      e.currentTarget.style.background = 'rgba(168, 255, 53, 0.04)';
+                      e.currentTarget.style.background = 'var(--primary-glow)';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--border-color)';
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
                     }}
                   >
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
